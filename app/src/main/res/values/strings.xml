@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">MirrorApp</string>
+    <string name="def_err_text">Unknown error</string>
+    <string name="onboarding_title_1">Зеркало \nв твоем кармане!</string>
+    <string name="onboarding_subtitle_1">Брейся, поправляй макияж или надевай линзы где угодно</string>
+    <string name="later">Позже</string>
+    <string name="recover">Восстановить</string>
+    <string name="next">Next</string>
+    <string name="start_free">start free</string>
+    <string name="pp_start_text">Продолжая, я принимаю </string>
+    <string name="privicy_text">и Политику конфеденциальности </string>
+    <string name="terms_text">Пользовательское соглашение </string>
+    <string name="poll_title">Для чего вам нужно зеркало?</string>
+    <string name="poll_1">Бриться</string>
+    <string name="poll_2">Наносить макияж</string>
+    <string name="poll_3">Надевать линзы</string>
+    <string name="poll_4">Пользоваться в темноте</string>
+    <string name="poll_5">Чистить зубы</string>
+    <string name="poll_6">Просто посмотреться</string>
+    <string name="ca_title">Чтобы начать, нам нужен доступ к камере</string>
+    <string name="ca_button">Выдать доступ</string>
+    <string name="pay_title">Великолепно выглядишь 🔥</string>
+    <string name="pay_subtitle">Пусть реклама не закрывает тебя и все маски будут доступны!</string>
+    <string name="price1">67 ₽/месяц</string>
+    <string name="price2">201 ₽/год</string>
+    <string name="sub_price1">3 дня бесплатно</string>
+    <string name="subprice2">7 дней бесплатно</string>
+    <string name="econ">Экономия 67%</string>
+    <string name="pay_description">3 дня бесплатно, затем 67 ₽/месяц</string>
+    <string name="pay_terms">Пользовательское соглашение</string>
+    <string name="pay_policy">Политика конфеденциальности</string>
+
+    <!--config-->
+    <string name="splashType">splashTextEN</string>
+</resources>
