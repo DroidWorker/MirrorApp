@@ -5,11 +5,11 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import android.content.SharedPreferences
+import android.preference.PreferenceManager
 import com.kwork.mirrorapp.R
 
 class MainViewModel(val app: Application) : AndroidViewModel(app) {
     var isReadytoLoad : MutableStateFlow<Boolean> = MutableStateFlow(false)
-
 
     val sharedPreference = app.getSharedPreferences("appSettings", Context.MODE_PRIVATE)
     var editor = sharedPreference.edit()
@@ -18,10 +18,12 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
         get() = sharedPreference.getString(app.resources.getString(R.string.splashType), app.resources.getString(R.string.def_err_text)) ?: app.resources.getString(R.string.def_err_text)
         set(value){
             editor.putString(app.resources.getString(R.string.splashType), value)
+            editor.apply()
         }
     var isFirstLaunch : Boolean
-    get() = sharedPreference.getBoolean("isFirstLaunch", true)
-    set(value){
-        editor.putBoolean("isFirstLaunch", value)
-    }
+        get() = sharedPreference.getBoolean("isFirstLaunch", true)
+        set(value){
+            editor.putBoolean("isFirstLaunch", value)
+            editor.apply()
+        }
 }

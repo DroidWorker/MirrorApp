@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Зеркало</string>
+    <string name="app_name">Hand Mirror</string>
+    <string name="version">Версия 1.01</string>
     <string name="def_err_text">Неизвестная ошибка!</string>
     <string name="onboarding_title_1">Зеркало \nв твоем кармане!</string>
     <string name="onboarding_subtitle_1">Брейся, поправляй макияж или надевай линзы где угодно</string>
@@ -30,6 +31,16 @@
     <string name="pay_description">3 дня бесплатно, затем 67 ₽/месяц</string>
     <string name="pay_terms">Пользовательское соглашение</string>
     <string name="pay_policy">Политика конфеденциальности</string>
+    <string name="title_360">Режим 360°</string>
+    <string name="subtitle_360">В режиме 360° ты можешь hассмотреть своё лицо с разных ракурсов</string>
+    <string name="description_360">Для этого возьми смартфон в вытянутую руку, начни запись и проведи слева направо</string>
+    <string name="clear">Понятно</string>
+    <string name="settings">Настройки</string>
+    <string name="support_developers">Поддержать разработчика</string>
+    <string name="buy_prem">Купить премиум</string>
+    <string name="rate_app">Оценить приложение</string>
+    <string name="review">Оставить отзыв </string>
+    <string name="other_app">Другие приложения </string>
     <!--config-->
     <string name="splashType">splashTextRU</string>
 </resources>
