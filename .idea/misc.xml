@@ -3,10 +3,15 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_blck.xml" value="0.124" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_white.xml" value="0.124" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/drawable/seecbar_style.xml" value="0.166" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/drawable/seekbarstyle.xml" value="0.166" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_camera_access.xml" value="0.11302083333333333" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_fullscreen.xml" value="0.25416666666666665" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_gallery.xml" value="0.25416666666666665" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_info360.xml" value="0.11302083333333333" />
-        <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_main.xml" value="0.176" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_main.xml" value="0.2" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_onboarding.xml" value="0.25416666666666665" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_pay.xml" value="0.176" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_poll.xml" value="0.176" />
@@ -14,6 +19,7 @@
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_splash.xml" value="0.11302083333333333" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/content_splash.xml" value="0.2" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/onboarding_item.xml" value="0.11302083333333333" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/menu/menu_galery.xml" value="0.25416666666666665" />
       </map>
     </option>
   </component>

@@ -4,17 +4,27 @@ import android.Manifest.permission.CAMERA
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.content.res.Resources
+import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.Rect
 import android.graphics.SurfaceTexture
+import android.graphics.drawable.ColorDrawable
 import android.hardware.camera2.*
 import android.os.Bundle
 import android.util.Log
 import android.view.Surface
-import android.view.SurfaceView
 import android.view.TextureView
-import android.widget.ImageView
+import android.view.View
+import android.view.ViewGroup
+import android.view.animation.TranslateAnimation
+import android.widget.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.setPadding
 import com.kwork.mirrorapp.VM.MainViewModel
 import java.util.*
 
@@ -29,7 +39,15 @@ class MainActivity : AppCompatActivity() {
     var openedCamera = 1
     var mCameraManager: CameraManager? = null
 
+    var flashlightEnabled = false
+    var backlightEnables = false
+    var flipEnabled = false
+    var isMirrorSelected = true
+
     lateinit var mImageView: TextureView
+    lateinit var imageContainer: ConstraintLayout
+    lateinit var seekbar: SeekBar
+    lateinit var backgroundLayout : ConstraintLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +56,29 @@ class MainActivity : AppCompatActivity() {
         startActivity(splashIntent)
         setContentView(R.layout.activity_main)
         mImageView = findViewById(R.id.mImageView)
+        imageContainer = findViewById(R.id.imageContainer)
+        seekbar = findViewById(R.id.seekBar)
+        backgroundLayout = findViewById(R.id.backgroundLayout)
+        val seekBar = findViewById<SeekBar>(R.id.brightnessSeekBar)
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                adjustBrightness(seekBar)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+        })
+        val backlightSeekBar = findViewById<SeekBar>(R.id.backlightSeekBar)
+        backlightSeekBar.setOnSeekBarChangeListener(object  : SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                adjustBacklight(seekBar)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+        })
     }
 
     override fun onResume(){
@@ -81,6 +122,7 @@ class MainActivity : AppCompatActivity() {
                 mImageView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
                     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
                         myCameras!![openedCamera].openCamera()
+                        myCameras!![openedCamera].setFocusBySeekBar(findViewById(R.id.seekBar))
                     }
                     override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {}
                     override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
@@ -96,11 +138,143 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun onSettingsClick(V: View){
+        val intent = Intent(this@MainActivity, SettingsActivity::class.java)
+        startActivity(intent)
+    }
+
+    fun onMirrorClick(v: View){
+        isMirrorSelected = true
+        val ll = findViewById<LinearLayout>(R.id.moveContainer)
+        val bMirror = findViewById<TextView>(R.id.buttonMirror)
+        val b360 = findViewById<TextView>(R.id.button360)
+        ll.startAnimation(TranslateAnimation(-100f, 0f,
+            0f, 0f)
+            .apply {
+                duration = 400
+                fillAfter = true
+            })
+        b360.setBackgroundColor(Color.TRANSPARENT)
+        if (backlightEnables){
+            bMirror.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_blck)
+            bMirror.setTextColor(Color.WHITE)
+            b360.setTextColor(Color.BLACK)
+        }
+        else{
+            bMirror.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_white)
+            bMirror.setTextColor(Color.BLACK)
+            b360.setTextColor(Color.WHITE)
+        }
+    }
+
+    fun on360Click(v: View){
+        isMirrorSelected =  false
+        val ll = findViewById<LinearLayout>(R.id.moveContainer)
+        val bMirror = findViewById<TextView>(R.id.buttonMirror)
+        val b360 = findViewById<TextView>(R.id.button360)
+        ll.startAnimation(TranslateAnimation(0f, -100f,
+            0f, 0f)
+            .apply {
+                duration = 400
+                fillAfter = true
+            })
+        bMirror.setBackgroundColor(Color.TRANSPARENT)
+        if(backlightEnables){
+            b360.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_blck)
+            b360.setTextColor(Color.WHITE)
+            bMirror.setTextColor(Color.BLACK)
+        }
+        else{
+            b360.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_white)
+            b360.setTextColor(Color.BLACK)
+            bMirror.setTextColor(Color.WHITE)
+        }
+    }
+
+    fun onFlipClick(v: View){
+        val matrix = Matrix()
+        if (!flipEnabled) {
+            matrix.setScale(-1f, 1f, mImageView.width / 2f, mImageView.height / 2f)
+            mImageView.setTransform(matrix)
+            flipEnabled = true
+        }else{
+            matrix.setScale(1f, 1f, mImageView.width / 2f, mImageView.height / 2f)
+            mImageView.setTransform(matrix)
+            flipEnabled = false
+        }
+    }
+
+    fun onFlashlightClick(V: View){
+        mCameraManager?.let { myCameras?.get(openedCamera)?.turnOnFlashlight(it) }
+    }
+
+    fun onBackLightClick(v: View){
+        val bMirror = findViewById<TextView>(R.id.buttonMirror)
+        val b360 = findViewById<TextView>(R.id.button360)
+        val bBacklight = findViewById<ImageButton>(R.id.buttonBacklight)
+        val seekbarbacklight = findViewById<SeekBar>(R.id.backlightSeekBar)
+        val seekbarbrightness = findViewById<SeekBar>(R.id.brightnessSeekBar)
+        if (backlightEnables){
+            backgroundLayout.setBackgroundColor(Color.BLACK)
+            seekbarbacklight.visibility = View.GONE
+            //seekbarbrightness.layoutParams = LinearLayout.LayoutParams(200, 100)
+            bBacklight.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.backlight))
+            imageContainer.setPadding(0)
+            if (isMirrorSelected){
+                bMirror.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_white)
+                bMirror.setTextColor(Color.BLACK)
+                b360.setTextColor(Color.WHITE)
+            }
+            else{
+                b360.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_white)
+                b360.setTextColor(Color.BLACK)
+                bMirror.setTextColor(Color.WHITE)
+            }
+            backlightEnables = false
+        }
+        else {
+            backgroundLayout.setBackgroundColor(Color.WHITE)
+            seekbarbacklight.visibility = View.VISIBLE
+            //seekbarbrightness.layoutParams = LinearLayout.LayoutParams(170, 170)
+            bBacklight.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.backlight_off))
+            imageContainer.setPadding(100)
+            if (isMirrorSelected){
+                bMirror.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_blck)
+                bMirror.setTextColor(Color.WHITE)
+                b360.setTextColor(Color.BLACK)
+            }
+            else{
+                b360.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_blck)
+                b360.setTextColor(Color.WHITE)
+                bMirror.setTextColor(Color.BLACK)
+            }
+            backlightEnables = true
+        }
+    }
+
+
+    fun onOpengalleryClick(v: View){
+        val intent = Intent(this@MainActivity, GalleryActivity::class.java)
+        startActivity(intent)
+    }
+
+    private fun adjustBrightness(seekBar: SeekBar) {
+        val brightness = seekBar.progress / 100.0f
+        val layout = window.attributes
+        layout.screenBrightness = brightness
+        window.attributes = layout
+    }
+
+    private fun adjustBacklight(seekBar: SeekBar) {
+        val light = seekBar.progress
+        imageContainer.setPadding(light)
+    }
 
     inner class CameraService(cameraManager: CameraManager, cameraID: String) {
         private val mCameraID: String
         private var mCameraDevice: CameraDevice? = null
         private var mCaptureSession: CameraCaptureSession? = null
+        private var characteristics: CameraCharacteristics? = null
         val isOpen: Boolean
             get() = mCameraDevice != null
 
@@ -110,9 +284,13 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             try {
-                println("open camera"+mCameraID)
                 if (checkSelfPermission(CAMERA) == PackageManager.PERMISSION_GRANTED) {
                     mCameraManager?.openCamera(mCameraID, mCameraCallback, null)
+                    characteristics = mCameraManager?.getCameraCharacteristics(mCameraID)
+                    val focusRange = characteristics?.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE) to
+                            characteristics?.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE)
+                    seekbar.progress = (focusRange.second!!/2*100f).toInt()
+                    seekbar.max = (focusRange.second!!*100f).toInt()
                 }
             } catch (e: CameraAccessException) {
                 Log.i("opencamerr", e.localizedMessage)
@@ -131,6 +309,68 @@ class MainActivity : AppCompatActivity() {
             mCameraID = cameraID
         }
 
+        fun turnOnFlashlight(cameraManager: CameraManager) {
+            try {
+                val cameraId = cameraManager.cameraIdList[0] // Use the first available camera
+                val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+                val support = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
+                if (support == true) {
+                    if (!flashlightEnabled) {
+                        cameraManager.setTorchMode(cameraId, true)
+                        flashlightEnabled = true
+                    }else {
+                        cameraManager.setTorchMode(cameraId, false)
+                        flashlightEnabled = false
+                    }
+                } else {
+                    Toast.makeText(ctx, "Flashlight not available on this device", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+
+        fun setFocusBySeekBar(seekBar: SeekBar) {
+            seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    if (fromUser) {
+                        try {
+                            // Get the minimum and maximum focus distances supported by the camera
+                            val focusRange = characteristics?.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE) to
+                                    characteristics?.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE)
+
+                            // Calculate the desired focus distance based on the SeekBar progress
+                            val desiredFocusDistance = (focusRange.second!! - focusRange.first!!) * progress / 100f + focusRange.first!!
+
+                            val texture: SurfaceTexture? = mImageView.surfaceTexture
+                            // texture.setDefaultBufferSize(1920,1080);
+                            val surface = Surface(texture)
+
+                            // Create a new capture request with the desired focus distance
+                            val captureRequestBuilder = mCameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+                            captureRequestBuilder?.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
+                            captureRequestBuilder?.set(CaptureRequest.LENS_FOCUS_DISTANCE, desiredFocusDistance)
+                            captureRequestBuilder?.addTarget(surface)
+                            captureRequestBuilder?.build()
+
+                            // Update the focus distance in the current capture session
+                            if (captureRequestBuilder != null) {
+                                mCaptureSession?.setRepeatingRequest(captureRequestBuilder.build(), null, null)
+                            }
+                        } catch (e: CameraAccessException) {
+                            Log.e("focusERR", "Failed to change focus", e)
+                        }
+                    }
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            })
+        }
+
+
+
         private fun createCameraPreviewSession() {
 
                     val texture: SurfaceTexture? = mImageView.surfaceTexture
@@ -144,7 +384,8 @@ class MainActivity : AppCompatActivity() {
                                 override fun onConfigured(session: CameraCaptureSession) {
                                     mCaptureSession = session
                                     try {
-                                        mCaptureSession!!.setRepeatingRequest(builder.build(), null, null)
+                                        //mCaptureSession!!.setRepeatingRequest(builder.build(), null, null)
+                                        updatePreview(builder)
                                     } catch (e: CameraAccessException) {
                                         e.printStackTrace()
                                     }
@@ -158,6 +399,10 @@ class MainActivity : AppCompatActivity() {
                         e.printStackTrace()
                     }
 
+        }
+        private fun updatePreview(captureRequestBuilder: CaptureRequest.Builder) {
+            if (mCameraDevice == null) return
+            mCaptureSession!!.setRepeatingRequest(captureRequestBuilder.build(), null, null)
         }
 
         private val mCameraCallback: CameraDevice.StateCallback =

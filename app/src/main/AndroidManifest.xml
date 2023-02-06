@@ -16,6 +16,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MirrorApp.NoActionBar">
         <activity
+            android:name=".FullscreenActivity"
+            android:exported="false" />
+        <activity
+            android:name=".GalleryActivity"
+            android:exported="false" />
+        <activity
             android:name=".SettingsActivity"
             android:exported="false" />
         <activity

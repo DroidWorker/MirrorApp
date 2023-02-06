@@ -5,11 +5,13 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import android.content.SharedPreferences
+import android.graphics.Bitmap
 import android.preference.PreferenceManager
 import com.kwork.mirrorapp.R
 
 class MainViewModel(val app: Application) : AndroidViewModel(app) {
     var isReadytoLoad : MutableStateFlow<Boolean> = MutableStateFlow(false)
+    var currentImage : MutableStateFlow<Bitmap?> = MutableStateFlow(null)
 
     val sharedPreference = app.getSharedPreferences("appSettings", Context.MODE_PRIVATE)
     var editor = sharedPreference.edit()

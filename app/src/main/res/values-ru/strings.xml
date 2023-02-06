@@ -41,6 +41,8 @@
     <string name="rate_app">Оценить приложение</string>
     <string name="review">Оставить отзыв </string>
     <string name="other_app">Другие приложения </string>
+    <string name="button_mirror">Зеркало</string>
+    <string name="button_360">360°</string>
     <!--config-->
     <string name="splashType">splashTextRU</string>
 </resources>
