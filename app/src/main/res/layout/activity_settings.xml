@@ -71,6 +71,7 @@
         android:layout_marginTop="8dp"
         android:drawableLeft="@drawable/support_dev"
         android:drawablePadding="14dp"
+        android:onClick="onSupportClick"
         android:text="@string/support_developers"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
@@ -99,6 +100,7 @@
         android:layout_height="wrap_content"
         android:drawableLeft="@drawable/star"
         android:drawablePadding="14dp"
+        android:onClick="onRateClick"
         android:text="@string/rate_app"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
@@ -113,6 +115,7 @@
         android:layout_height="wrap_content"
         android:drawableLeft="@drawable/review"
         android:drawablePadding="14dp"
+        android:onClick="onReviewClick"
         android:text="@string/review"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
@@ -149,4 +152,5 @@
         app:layout_constraintEnd_toEndOf="@+id/settingsAppName"
         app:layout_constraintStart_toEndOf="@+id/imageView2"
         app:layout_constraintTop_toBottomOf="@+id/settingsAppName" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

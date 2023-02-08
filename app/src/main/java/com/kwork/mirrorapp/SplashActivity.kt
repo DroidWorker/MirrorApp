@@ -1,6 +1,9 @@
 package com.kwork.mirrorapp
 
+import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
@@ -22,16 +25,35 @@ class SplashActivity : AppCompatActivity() {
         tv.text = viewModel.splashText
         tv.setOnClickListener(View.OnClickListener {
             val anim = AnimationUtils.loadAnimation(this, R.anim.diagonal)
-            findViewById<ConstraintLayout>(R.id.splashRoot).startAnimation(anim)
+            anim.fillAfter = true
+            findViewById<TextView>(R.id.splashText).startAnimation(anim)
             anim.setAnimationListener(object : AnimationListener {
                 override fun onAnimationStart(animation: Animation) {}
                 override fun onAnimationEnd(animation: Animation) {
                     finish()
+                    overridePendingTransition(R.anim.diagonal,R.anim.alpha)
                 }
 
                 override fun onAnimationRepeat(animation: Animation) {}
             })
         })
+        Handler(Looper.getMainLooper()).postDelayed({
+            close()
+        }, 3000) // 3000 is the delayed time in milliseconds.
     }
 
+    fun close(){
+        val anim = AnimationUtils.loadAnimation(this, R.anim.diagonal)
+        anim.fillAfter = true
+        findViewById<TextView>(R.id.splashText).startAnimation(anim)
+        anim.setAnimationListener(object : AnimationListener {
+            override fun onAnimationStart(animation: Animation) {}
+            override fun onAnimationEnd(animation: Animation) {
+                finish()
+                overridePendingTransition(R.anim.diagonal,R.anim.alpha)
+            }
+
+            override fun onAnimationRepeat(animation: Animation) {}
+        })
+    }
 }

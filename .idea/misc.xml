@@ -3,7 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/desktop/kwork/app/src/main/res/drawable/image_selection.xml" value="0.166" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/drawable/mine.xml" value="0.166" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_blck.xml" value="0.124" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_corners.xml" value="0.166" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_transparent.xml" value="0.124" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_white.xml" value="0.124" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/seecbar_style.xml" value="0.166" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/seekbarstyle.xml" value="0.166" />
@@ -17,7 +21,11 @@
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_poll.xml" value="0.176" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_settings.xml" value="0.25416666666666665" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_splash.xml" value="0.11302083333333333" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/layout/bottom_sheet_dialog_rate.xml" value="0.16799999999999998" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/layout/bottom_sheet_dialog_review.xml" value="0.136" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/layout/bottom_sheet_dialog_support.xml" value="0.25052083333333336" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/content_splash.xml" value="0.2" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/layout/grid_image_item.xml" value="0.25416666666666665" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/onboarding_item.xml" value="0.11302083333333333" />
         <entry key="..\:/desktop/kwork/app/src/main/res/menu/menu_galery.xml" value="0.25416666666666665" />
       </map>

@@ -17,7 +17,7 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     var editor = sharedPreference.edit()
 
     var splashText : String
-        get() = sharedPreference.getString(app.resources.getString(R.string.splashType), app.resources.getString(R.string.def_err_text)) ?: app.resources.getString(R.string.def_err_text)
+        get() = sharedPreference.getString(app.resources.getString(R.string.splashType), app.resources.getString(R.string.splash_text)) ?: app.resources.getString(R.string.splash_text)
         set(value){
             editor.putString(app.resources.getString(R.string.splashType), value)
             editor.apply()

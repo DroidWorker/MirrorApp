@@ -4,20 +4,22 @@ import android.Manifest.permission.CAMERA
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
-import android.content.res.Resources
-import android.graphics.Color
-import android.graphics.Matrix
-import android.graphics.Rect
-import android.graphics.SurfaceTexture
-import android.graphics.drawable.ColorDrawable
+import android.graphics.*
 import android.hardware.camera2.*
+import android.hardware.camera2.CameraCaptureSession.CaptureCallback
+import android.media.Image
+import android.media.ImageReader
+import android.media.ImageReader.OnImageAvailableListener
 import android.os.Bundle
+import android.os.Environment
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.Log
 import android.view.Surface
 import android.view.TextureView
 import android.view.View
-import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.view.animation.TranslateAnimation
 import android.widget.*
 import androidx.activity.viewModels
@@ -25,15 +27,25 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
+import androidx.lifecycle.ViewModelProvider
 import com.kwork.mirrorapp.VM.MainViewModel
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.nio.ByteBuffer
 import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
-    public lateinit var ctx : Context
+    lateinit var ctx : Context
     private val userViewModel by viewModels<MainViewModel>()
     var isAppReady = false
     var isCameraReady = false
+    var isCamStarted = false
+    var isInShot = false
+
+    private var mBackgroundThread: HandlerThread? = null
+    private var mBackgroundHandler: Handler? = null
 
     var myCameras: ArrayList<CameraService>? = null
     var openedCamera = 1
@@ -51,8 +63,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ViewModelProvider(this)[MainViewModel::class.java]
         ctx = this
-        val splashIntent : Intent = Intent(this@MainActivity, SplashActivity::class.java)
+        val splashIntent = Intent(this@MainActivity, SplashActivity::class.java)
         startActivity(splashIntent)
         setContentView(R.layout.activity_main)
         mImageView = findViewById(R.id.mImageView)
@@ -92,15 +105,40 @@ class MainActivity : AppCompatActivity() {
             startActivity(caIntent)
         }
         else {
+            overridePendingTransition(R.anim.diagonal,R.anim.alpha)
             isCameraReady = true
-            startCam()
+            if (!isCamStarted) startCam()
         }
         isAppReady=true
+        startBackgroundThread()
     }
 
     override fun onPause() {
         super.onPause()
+        //myCameras?.get(openedCamera)?.closeCamera()
+        stopBackgroundThread()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
         myCameras?.get(openedCamera)?.closeCamera()
+    }
+
+    private fun startBackgroundThread() {
+        mBackgroundThread = HandlerThread("CameraBackground")
+        mBackgroundThread!!.start()
+        mBackgroundHandler = Handler(mBackgroundThread!!.looper)
+    }
+
+    private fun stopBackgroundThread() {
+        mBackgroundThread!!.quitSafely()
+        try {
+            mBackgroundThread!!.join()
+            mBackgroundThread = null
+            mBackgroundHandler = null
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
+        }
     }
 
     private fun startCam(){
@@ -119,6 +157,7 @@ class MainActivity : AppCompatActivity() {
                     myCameras!!.add(CameraService(mCameraManager!!, cameraID))
                     i++
                 }
+                if (isCamStarted) myCameras!![openedCamera].openCamera()
                 mImageView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
                     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
                         myCameras!![openedCamera].openCamera()
@@ -258,6 +297,20 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    fun noAdsClick(v: View){
+        val intent = Intent(this@MainActivity, PayActivity::class.java)
+        startActivity(intent)
+    }
+
+    fun onCamShot(v: View){
+        if (!isInShot){
+            myCameras?.get(openedCamera)?.makePhoto()
+            isInShot = true
+        }else{
+            if (isCamStarted)startCam()
+        }
+    }
+
     private fun adjustBrightness(seekBar: SeekBar) {
         val brightness = seekBar.progress / 100.0f
         val layout = window.attributes
@@ -275,6 +328,9 @@ class MainActivity : AppCompatActivity() {
         private var mCameraDevice: CameraDevice? = null
         private var mCaptureSession: CameraCaptureSession? = null
         private var characteristics: CameraCharacteristics? = null
+        private var mImageReader: ImageReader? = null
+
+        private val mFile: File = File(ctx.getExternalFilesDir(null), "mirrorImages/1.png")
         val isOpen: Boolean
             get() = mCameraDevice != null
 
@@ -285,6 +341,7 @@ class MainActivity : AppCompatActivity() {
             }
             try {
                 if (checkSelfPermission(CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    println("cManOpen")
                     mCameraManager?.openCamera(mCameraID, mCameraCallback, null)
                     characteristics = mCameraManager?.getCameraCharacteristics(mCameraID)
                     val focusRange = characteristics?.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE) to
@@ -372,14 +429,15 @@ class MainActivity : AppCompatActivity() {
 
 
         private fun createCameraPreviewSession() {
-
+            mImageReader = ImageReader.newInstance(1920,1080, ImageFormat.JPEG,1)
+            mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener, null)
                     val texture: SurfaceTexture? = mImageView.surfaceTexture
                     // texture.setDefaultBufferSize(1920,1080);
                     val surface = Surface(texture)
                     try {
                         val builder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
                         builder.addTarget(surface)
-                        mCameraDevice!!.createCaptureSession(Arrays.asList(surface),
+                        mCameraDevice!!.createCaptureSession(Arrays.asList(surface, mImageReader!!.surface),
                             object : CameraCaptureSession.StateCallback() {
                                 override fun onConfigured(session: CameraCaptureSession) {
                                     mCaptureSession = session
@@ -405,9 +463,48 @@ class MainActivity : AppCompatActivity() {
             mCaptureSession!!.setRepeatingRequest(captureRequestBuilder.build(), null, null)
         }
 
+        fun makePhoto() {
+            try {
+                // This is the CaptureRequest.Builder that we use to take a picture.
+                val captureBuilder =
+                    mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
+                captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, 270)
+                captureBuilder.addTarget(mImageReader!!.surface)
+                val CaptureCallback: CaptureCallback = object : CaptureCallback() {
+                    override fun onCaptureCompleted(
+                        session: CameraCaptureSession,
+                        request: CaptureRequest,
+                        result: TotalCaptureResult
+                    ) {
+                    }
+                }
+                mCaptureSession!!.stopRepeating()
+                mCaptureSession!!.abortCaptures()
+                mCaptureSession!!.capture(captureBuilder.build(), CaptureCallback, null)
+            } catch (e: CameraAccessException) {
+                e.printStackTrace()
+            }
+        }
+
+        private val mOnImageAvailableListener: OnImageAvailableListener =
+            object : OnImageAvailableListener {
+                override fun onImageAvailable(reader: ImageReader) {
+                    run {
+                        mBackgroundHandler?.post(ImageSaver(reader.acquireNextImage(), mFile, ctx))
+                        Toast.makeText(
+                            this@MainActivity,
+                            "фотка доступна для сохранения",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    }
+                }
+            }
+
         private val mCameraCallback: CameraDevice.StateCallback =
             object : CameraDevice.StateCallback() {
                 override fun onOpened(camera: CameraDevice) {
+                    isCamStarted = true
                     mCameraDevice = camera
                     Log.i("camerr", "Open camera  with id:" + mCameraDevice!!.id)
                     createCameraPreviewSession()
@@ -424,4 +521,46 @@ class MainActivity : AppCompatActivity() {
                 }
             }
     }
+}
+private class ImageSaver internal constructor(image: Image, file: File, ctx: Context) : Runnable {
+    private var mFile: File = file
+    private val mImage: Image = image
+    private val ctx: Context = ctx
+    override fun run() {
+        val buffer: ByteBuffer = mImage.planes[0].buffer
+        val bytes = ByteArray(buffer.remaining())
+        buffer.get(bytes)
+        var output: FileOutputStream? = null
+        try {
+            val folder = File(ctx.getExternalFilesDir(null), "mirrorImages")
+            var newName = "1.png"
+            var index = 0
+            if (folder.exists()) {
+                for (file in folder.listFiles()) {
+                    if (file.name.split(".")[0].toIntOrNull()!=null)
+                        if(file.name.split(".")[0].toIntOrNull()!!>index)
+                            index = file.name.split(".")[0].toInt()
+                }
+            }
+            if (index>0) {
+                index++
+                newName = "$index.png"
+            }
+            mFile = File(ctx.getExternalFilesDir(null), "mirrorImages/$newName")
+            output = FileOutputStream(mFile)
+            output.write(bytes)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        } finally {
+            mImage.close()
+            if (null != output) {
+                try {
+                    output.close()
+                } catch (e: IOException) {
+                    println("saveERR"+e.localizedMessage)
+                }
+            }
+        }
+    }
+
 }

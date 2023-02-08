@@ -3,6 +3,7 @@
     <string name="app_name">Hand Mirror</string>
     <string name="version">Версия 1.01</string>
     <string name="def_err_text">Неизвестная ошибка!</string>
+    <string name="splash_text">Ты сегодня\nлучше всех ✨</string>
     <string name="onboarding_title_1">Зеркало \nв твоем кармане!</string>
     <string name="onboarding_subtitle_1">Брейся, поправляй макияж или надевай линзы где угодно</string>
     <string name="later">Позже</string>
@@ -43,6 +44,25 @@
     <string name="other_app">Другие приложения </string>
     <string name="button_mirror">Зеркало</string>
     <string name="button_360">360°</string>
+    <string name="gallery_title">Галерея</string>
+    <string name="selected">Выбрано: %1$d</string>
+    <string name="bsd_title">Поддержать разработчика</string>
+    <string name="bsd_icecream">Мороженное</string>
+    <string name="bsd_cup">Чашка кофе</string>
+    <string name="bsd_burger">Бургер</string>
+    <string name="bsd_pizza">Пицца</string>
+    <string name="bsd_dinner">Праздничный ужин</string>
+    <string name="bsdr_title">Оставить отзыв</string>
+    <string name="bsdr_hint">Напишите ваш отзыв</string>
+    <string name="bsdr_send">Отправить</string>
+    <string name="bsdrate_title">Вам понравилось приложение?</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="bsdr_rate_title">Оцените приложение</string>
+    <string name="rate">Оценить</string>
+    <string name="bsdrate_bad_title">Пожалуйста, помогите нам улучшить приложение!</string>
+    <string name="bsdrate_bad_description">Опишите, что вам не понравилось</string>
+    <string name="rate_on_pm">Оценить на Google Play</string>
     <!--config-->
     <string name="splashType">splashTextRU</string>
 </resources>

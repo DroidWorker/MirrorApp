@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="SmoothBottomSheetDialogAnimation" parent="@style/Animation.Design.BottomSheetDialog">
+        <item name="android:windowEnterTransition">@transition/bsd_enter</item>
+        <item name="android:windowExitTransition">@transition/bsd_exit</item>
+    </style>
+</resources>
