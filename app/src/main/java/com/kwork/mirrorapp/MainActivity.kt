@@ -346,10 +346,12 @@ class MainActivity : AppCompatActivity() {
                     characteristics = mCameraManager?.getCameraCharacteristics(mCameraID)
                     val focusRange = characteristics?.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE) to
                             characteristics?.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE)
-                    seekbar.progress = (focusRange.second!!/2*100f).toInt()
-                    seekbar.max = (focusRange.second!!*100f).toInt()
+                    if(focusRange.first!=null&&focusRange.second!=null) {
+                        seekbar.progress = (focusRange.second!! / 2 * 100f).toInt()
+                        seekbar.max = (focusRange.second!! * 100f).toInt()
+                    }
                 }
-            } catch (e: CameraAccessException) {
+            } catch (e: Exception) {
                 Log.i("opencamerr", e.localizedMessage)
             }
         }
@@ -397,6 +399,7 @@ class MainActivity : AppCompatActivity() {
                             val focusRange = characteristics?.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE) to
                                     characteristics?.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE)
 
+                            if(focusRange.first==null||focusRange.second==null) return
                             // Calculate the desired focus distance based on the SeekBar progress
                             val desiredFocusDistance = (focusRange.second!! - focusRange.first!!) * progress / 100f + focusRange.first!!
 
@@ -478,8 +481,8 @@ class MainActivity : AppCompatActivity() {
                     ) {
                     }
                 }
-                mCaptureSession!!.stopRepeating()
-                mCaptureSession!!.abortCaptures()
+                //mCaptureSession!!.stopRepeating()
+                //mCaptureSession!!.abortCaptures()
                 mCaptureSession!!.capture(captureBuilder.build(), CaptureCallback, null)
             } catch (e: CameraAccessException) {
                 e.printStackTrace()
@@ -556,6 +559,10 @@ private class ImageSaver internal constructor(image: Image, file: File, ctx: Con
             if (null != output) {
                 try {
                     output.close()
+                    val intent = Intent(ctx, FullscreenActivity::class.java)
+                    intent.putExtra("imgPath", mFile.absolutePath)
+                    intent.putExtra("mode", "preview")
+                    ctx.startActivity(intent)
                 } catch (e: IOException) {
                     println("saveERR"+e.localizedMessage)
                 }

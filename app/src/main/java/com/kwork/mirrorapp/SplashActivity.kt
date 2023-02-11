@@ -21,6 +21,9 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
+        //loading data
+        viewModel.loadVotes()
+
         val tv = findViewById<TextView>(R.id.splashText)
         tv.text = viewModel.splashText
         tv.setOnClickListener(View.OnClickListener {

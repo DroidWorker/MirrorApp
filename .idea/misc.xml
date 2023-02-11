@@ -7,6 +7,7 @@
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/mine.xml" value="0.166" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_blck.xml" value="0.124" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_corners.xml" value="0.166" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_corners_off.xml" value="0.124" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_transparent.xml" value="0.124" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/rounded_white.xml" value="0.124" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/seecbar_style.xml" value="0.166" />
@@ -28,6 +29,7 @@
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/grid_image_item.xml" value="0.25416666666666665" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/onboarding_item.xml" value="0.11302083333333333" />
         <entry key="..\:/desktop/kwork/app/src/main/res/menu/menu_galery.xml" value="0.25416666666666665" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/xml/provider_paths.xml" value="0.11302083333333333" />
       </map>
     </option>
   </component>

@@ -36,8 +36,8 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     fun onReviewClick(v: View){
-        val bottomSheetDialog = BottomSheetDialog(this, R.style.SmoothBottomSheetDialogAnimation)
-        bottomSheetDialog.setContentView(R.layout.bottom_sheet_dialog_support)
+        val bottomSheetDialog = SmoothBottomSheetDialog(this)
+        bottomSheetDialog.setContentView(R.layout.bottom_sheet_dialog_review)
 
         val text = bottomSheetDialog.findViewById<EditText>(R.id.BSDReditText)
         val send = bottomSheetDialog.findViewById<Button>(R.id.BSDRsend)
@@ -89,9 +89,11 @@ class SettingsActivity : AppCompatActivity() {
             buttonRate?.setOnClickListener{
                 if (rate in 1..3){
                     TODO("do nothing?")
+                    return@setOnClickListener
                 }
                 else if(rate>3){
                     TODO("go on playmarket")
+                    return@setOnClickListener
                 }
             }
         }

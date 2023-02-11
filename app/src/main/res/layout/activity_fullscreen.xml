@@ -38,24 +38,38 @@
         app:srcCompat="@drawable/arrow_back" />
 
     <ImageButton
-        android:id="@+id/imageView4"
+        android:id="@+id/shareButton"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
         android:background="@drawable/rounded_white"
-        app:layout_constraintEnd_toStartOf="@+id/imageView6"
+        android:onClick="onShareClick"
+        app:layout_constraintEnd_toStartOf="@+id/saveButton"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/share_black" />
 
     <ImageButton
-        android:id="@+id/imageView6"
+        android:id="@+id/saveButton"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/rounded_white"
+        android:onClick="onSaveClick"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/download_black" />
+
+    <ImageButton
+        android:id="@+id/imageButton3"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/rounded_white"
+        android:onClick="onBackClick"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/snowflake" />
 </androidx.constraintlayout.widget.ConstraintLayout>
