@@ -4,4 +4,14 @@
         <item name="android:windowEnterTransition">@transition/bsd_enter</item>
         <item name="android:windowExitTransition">@transition/bsd_exit</item>
     </style>
+    <style name="MyRadioButtonStyle" parent="@android:style/Widget.CompoundButton.RadioButton">
+        <item name="android:button">@drawable/rb_checker</item>
+    </style>
+    <declare-styleable name="TimelineView">
+        <attr name="left_thumb_color" format="color"/>
+        <attr name="progress_thumb_color" format="color"/>
+        <attr name="right_thumb_color" format="color"/>
+        <attr name="thumb_width" format="dimension"/>
+        <attr name="thumb_dimension" format="float"/>
+    </declare-styleable>
 </resources>

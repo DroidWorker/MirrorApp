@@ -27,11 +27,40 @@ class OnboardingActivity : AppCompatActivity() {
         val adapter = OnboardingViewAdapter(this)
         val button = findViewById<Button>(R.id.onboarding_next)
         val close = findViewById<ImageButton>(R.id.closeOnboarding)
+        val title = findViewById<TextView>(R.id.onboarding_title)
+        val subtitle = findViewById<TextView>(R.id.onboarding_subtitle)
         pager.adapter = adapter
         indicator.attachTo(pager)
         button.setOnClickListener(View.OnClickListener {
-            if(adapter.currentItem!=5)
+            if(adapter.currentItem!=5) {
                 adapter.currentItem++
+                when(adapter.currentItem){
+                    0->{
+                        title.text = resources.getString(R.string.onboarding_title_1)
+                        subtitle.text = resources.getString(R.string.onboarding_subtitle_1)
+                    }
+                    1->{
+                        title.text = resources.getString(R.string.onboarding_title_2)
+                        subtitle.text = resources.getString(R.string.onboarding_subtitle_2)
+                    }
+                    2->{
+                        title.text = resources.getString(R.string.onboarding_title_3)
+                        subtitle.text = resources.getString(R.string.onboarding_subtitle_3)
+                    }
+                    3->{
+                        title.text = resources.getString(R.string.onboarding_title_4)
+                        subtitle.text = resources.getString(R.string.onboarding_subtitle_4)
+                    }
+                    4->{
+                        title.text = resources.getString(R.string.onboarding_title_5)
+                        subtitle.text = resources.getString(R.string.onboarding_subtitle_5)
+                    }
+                    5->{
+                        title.text = resources.getString(R.string.onboarding_title_6)
+                        subtitle.text = resources.getString(R.string.onboarding_subtitle_6)
+                    }
+                }
+            }
             else {
                 //TODO("end onboarding")
                 finish()
@@ -57,5 +86,16 @@ class OnboardingActivity : AppCompatActivity() {
             finish()
             startActivity(payIntent)
         }
+    }
+
+    fun openPP(v : View){
+        val intent = Intent(this@OnboardingActivity, LongTextActivity::class.java)
+        intent.putExtra("type", "privacy")
+        startActivity(intent)
+    }
+    fun openTerms(v : View){
+        val intent = Intent(this@OnboardingActivity, LongTextActivity::class.java)
+        intent.putExtra("type", "terms")
+        startActivity(intent)
     }
 }

@@ -7,41 +7,206 @@
     android:background="#000000"
     android:padding="16dp">
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayoutMain"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/bsdr_title"
-        android:textColor="#FFFFFF"
-        android:textSize="24sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/BSDRsend"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:background="@drawable/rounded_transparent"
-        android:hint="@string/bsdr_send"
-        android:text="@string/bsdr_send"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/BSDReditText" />
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bsdr_title"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/BSDReditText"
-        android:layout_width="0dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="24dp"
-        android:ems="10"
-        android:gravity="start|top"
-        android:hint="@string/bsdr_hint"
-        android:inputType="textMultiLine"
-        android:textColor="#FFFFFF"
-        android:textColorHint="#CCFFFFFF"
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/BSDRsend"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/rounded_transparent"
+            android:hint="@string/bsdr_send"
+            android:text="@string/bsdr_send"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/BSDReditText" />
+
+        <EditText
+            android:id="@+id/BSDReditText"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="24dp"
+            android:ems="10"
+            android:gravity="start|top"
+            android:hint="@string/bsdr_hint"
+            android:inputType="textMultiLine"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#CCFFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView2" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/qlist1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="У Вас какая-то проблема или приложение Вам понравилось? "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <RadioGroup
+            android:id="@+id/radioGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/textView6">
+
+            <RadioButton
+                android:id="@+id/radioButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="У меня возникла проблема"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/radioButton3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Нужные мне функции отсутствуют"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/radioButton4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="У меня есть идея/предложение"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/radioButton5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Приложение неудобно "
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/radioButton6"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Много рекламы"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/radioButton7"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Мне нравится приложение"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/radioButton9"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Другое"
+                android:textColor="#FFFFFF" />
+        </RadioGroup>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/buttonNexxt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_white"
+            android:clickable="false"
+            android:text="Далее"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/radioGroup" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/qlist2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <RadioGroup
+            android:id="@+id/radioGroup2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/radioButton10"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Камера не работает"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/radioButton11"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Плохое качество изображения"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/radioButton12"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Проблемы с 3D режимом"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/radioButton13"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Другое"
+                android:textColor="#FFFFFF" />
+        </RadioGroup>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/buttonNexxt2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_white"
+            android:clickable="false"
+            android:text="Далее"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/radioGroup2" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

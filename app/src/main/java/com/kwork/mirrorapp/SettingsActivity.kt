@@ -1,5 +1,8 @@
 package com.kwork.mirrorapp
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -39,10 +42,132 @@ class SettingsActivity : AppCompatActivity() {
         val bottomSheetDialog = SmoothBottomSheetDialog(this)
         bottomSheetDialog.setContentView(R.layout.bottom_sheet_dialog_review)
 
+        var answer = "empty"
+
+        val clMain = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.constraintLayoutMain)
+        val cllist1 = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.qlist1)
+        val cllist2 = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.qlist2)
+        val rbg = bottomSheetDialog.findViewById<RadioGroup>(R.id.radioGroup)
+        val rbg2 = bottomSheetDialog.findViewById<RadioGroup>(R.id.radioGroup2)
+        val rb1 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton)
+        val rb2 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton3)
+        val rb3 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton4)
+        val rb4 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton5)
+        val rb5 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton6)
+        val rb6 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton7)
+        val rb7 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton9)
+        val buttonNext = bottomSheetDialog.findViewById<Button>(R.id.buttonNexxt)
+        val buttonNex2 = bottomSheetDialog.findViewById<Button>(R.id.buttonNexxt2)
         val text = bottomSheetDialog.findViewById<EditText>(R.id.BSDReditText)
         val send = bottomSheetDialog.findViewById<Button>(R.id.BSDRsend)
 
+        rbg?.setOnCheckedChangeListener{group, checkedID->
+            when(checkedID){
+                R.id.radioButton->{
+                    answer = "У меня возникла проблема"
+                }
+                R.id.radioButton3->{
+                    answer = "Нужные мне функции отсутствуют"
+                }
+                R.id.radioButton4->{
+                    answer = "У меня есть идея/предложение"
+                }
+                R.id.radioButton5->{
+                    answer = "Приложение неудобно"
+                }
+                R.id.radioButton6->{
+                    answer = "Много рекламы"
+                }
+                R.id.radioButton7->{
+                    answer = "Мне нравится приложение"
+                }
+                R.id.radioButton9->{
+                    answer = "Другое"
+                }
+            }
+            buttonNext?.isClickable = true
+        }
+
+        buttonNext?.setOnClickListener{
+            when(answer){
+                "У меня возникла проблема"->{
+                    cllist1?.visibility = View.GONE
+                    cllist2?.visibility = View.VISIBLE
+                }
+                "Нужные мне функции отсутствуют"->{
+                    cllist1?.visibility = View.GONE
+                    clMain?.visibility = View.VISIBLE
+                }
+                "У меня есть идея/предложение"->{
+                    cllist1?.visibility = View.GONE
+                    clMain?.visibility = View.VISIBLE
+                }
+                "Приложение неудобно"->{
+                    cllist1?.visibility = View.GONE
+                    clMain?.visibility = View.VISIBLE
+                }
+                "Много рекламы"->{
+                    val intent = Intent(this@SettingsActivity, PayActivity::class.java)
+                    finish()
+                    startActivity(intent)
+                }
+                "Мне нравится приложение"->{
+                    onRateClick(v)
+                    bottomSheetDialog.hide()
+                }
+                "Другое"->{
+                    cllist1?.visibility = View.GONE
+                    clMain?.visibility = View.VISIBLE
+                }
+            }
+
+        }
+        rbg2?.setOnCheckedChangeListener{group, checkedID->
+            when(checkedID){
+                R.id.radioButton10->{
+                    answer = "Камера не работа"
+                }
+                R.id.radioButton11->{
+                    answer = "Плохое качество изображения"
+                }
+                R.id.radioButton12->{
+                    answer = "Проблемы с 3D режимом"
+                }
+                R.id.radioButton13->{
+                    answer = "Другое"
+                }
+            }
+        }
+        buttonNex2?.setOnClickListener{
+            cllist2?.visibility = View.GONE
+            clMain?.visibility = View.VISIBLE
+        }
+
+        send?.setOnClickListener{
+            if (text?.text!!.length>2){
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = Uri.parse("mailto:")
+                    putExtra(Intent.EXTRA_EMAIL, arrayOf("test@test.test"))
+                    putExtra(Intent.EXTRA_SUBJECT, "Обращение пользователя AppMirror")
+                    putExtra(Intent.EXTRA_TEXT, "$answer, ")
+                }
+                if (intent.resolveActivity(this.packageManager) != null) {
+                    this.startActivity(intent)
+                } else {
+                    Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
+                }
+            }
+            bottomSheetDialog.hide()
+        }
+
         bottomSheetDialog.show()
+    }
+
+    fun shareText(v: View) {
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        intent.putExtra(Intent.EXTRA_TEXT, "https/googleplaystorelink")
+        this.startActivity(Intent.createChooser(intent, "Share via"))
     }
 
     fun onRateClick(v: View){
@@ -88,7 +213,7 @@ class SettingsActivity : AppCompatActivity() {
 
             buttonRate?.setOnClickListener{
                 if (rate in 1..3){
-                    TODO("do nothing?")
+                    bottomSheetDialog.hide()
                     return@setOnClickListener
                 }
                 else if(rate>3){
@@ -107,7 +232,17 @@ class SettingsActivity : AppCompatActivity() {
 
             buttonSendText?.setOnClickListener{
                 if (etText?.text?.length!! >3){
-                    TODO("send text")
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:")
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf("test@test.test"))
+                        putExtra(Intent.EXTRA_SUBJECT, "mirrorAPP")
+                        putExtra(Intent.EXTRA_TEXT, etText!!.text)
+                    }
+                    if (intent.resolveActivity(this.packageManager) != null) {
+                        this.startActivity(intent)
+                    } else {
+                        Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }

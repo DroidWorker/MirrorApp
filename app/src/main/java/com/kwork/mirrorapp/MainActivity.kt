@@ -1,5 +1,6 @@
 package com.kwork.mirrorapp
 
+import android.Manifest
 import android.Manifest.permission.CAMERA
 import android.content.Context
 import android.content.Intent
@@ -10,25 +11,32 @@ import android.hardware.camera2.CameraCaptureSession.CaptureCallback
 import android.media.Image
 import android.media.ImageReader
 import android.media.ImageReader.OnImageAvailableListener
+import android.media.MediaRecorder
+import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
+import android.util.Size
+import android.view.MotionEvent
 import android.view.Surface
 import android.view.TextureView
 import android.view.View
-import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.animation.TranslateAnimation
 import android.widget.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import com.kwork.mirrorapp.VM.MainViewModel
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -43,6 +51,8 @@ class MainActivity : AppCompatActivity() {
     var isCameraReady = false
     var isCamStarted = false
     var isInShot = false
+
+    var cameraMode = "photo"
 
     private var mBackgroundThread: HandlerThread? = null
     private var mBackgroundHandler: Handler? = null
@@ -60,6 +70,15 @@ class MainActivity : AppCompatActivity() {
     lateinit var imageContainer: ConstraintLayout
     lateinit var seekbar: SeekBar
     lateinit var backgroundLayout : ConstraintLayout
+    lateinit var shohtButtin : ImageButton
+    lateinit var mask1 : ImageButton
+    lateinit var mask2 : ImageButton
+    lateinit var maskHidden : ImageButton
+    lateinit var mask3 : ImageButton
+    lateinit var mask4 : ImageButton
+
+    val images = arrayOf(R.drawable.mask_default_1, R.drawable.mask_default_2, R.drawable.mask_default_3, R.drawable.mask_default_4, R.drawable.mask_default_2, R.drawable.mask_default_3)
+    var currentIndex = 3
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +91,13 @@ class MainActivity : AppCompatActivity() {
         imageContainer = findViewById(R.id.imageContainer)
         seekbar = findViewById(R.id.seekBar)
         backgroundLayout = findViewById(R.id.backgroundLayout)
+        shohtButtin = findViewById(R.id.shotButton)
+        mask1 = findViewById(R.id.mask1)
+        mask2 = findViewById(R.id.mask2)
+        maskHidden = findViewById(R.id.maskHidden)
+        mask3 = findViewById(R.id.mask3)
+        mask4 = findViewById(R.id.mask4)
+
         val seekBar = findViewById<SeekBar>(R.id.brightnessSeekBar)
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
@@ -92,6 +118,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
         })
+
     }
 
     override fun onResume(){
@@ -105,7 +132,13 @@ class MainActivity : AppCompatActivity() {
             startActivity(caIntent)
         }
         else {
-            overridePendingTransition(R.anim.diagonal,R.anim.alpha)
+            //overridePendingTransition(R.anim.diagonal,R.anim.alpha)
+            MobileAds.initialize(
+                this
+            ) { }
+            val mAdView :AdView = findViewById(R.id.adViewMain)
+            val adRequest = AdRequest.Builder().build()
+            mAdView.loadAd(adRequest)
             isCameraReady = true
             if (!isCamStarted) startCam()
         }
@@ -177,6 +210,46 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun onMackClick(v: View){
+        if(v.id==R.id.mask1||v.id==R.id.mask2) {
+            val animation = AnimationUtils.loadAnimation(this, R.anim.slide_mask)
+            mask1.startAnimation(animation)
+            mask2.startAnimation(animation)
+            maskHidden.startAnimation(animation)
+            mask3.startAnimation(animation)
+            mask4.startAnimation(animation)
+            currentIndex = (currentIndex + 1) % images.size
+            mask1.setImageResource(images[getImdex(false, 2)])
+            mask2.setImageResource(images[getImdex(false, 1)])
+            maskHidden.setImageResource(images[currentIndex])
+            mask3.setImageResource(images[getImdex(step = 1)])
+            mask4.setImageResource(images[getImdex(step = 2)])
+        }else{
+            val animation = AnimationUtils.loadAnimation(this, R.anim.slide_mask_reverce)
+            mask1.startAnimation(animation)
+            mask2.startAnimation(animation)
+            maskHidden.startAnimation(animation)
+            mask3.startAnimation(animation)
+            mask4.startAnimation(animation)
+            currentIndex = getImdex(false, 1)
+            mask1.setImageResource(images[getImdex(false, 2)])
+            mask2.setImageResource(images[getImdex(false, 1)])
+            maskHidden.setImageResource(images[currentIndex])
+            mask3.setImageResource(images[getImdex(step = 1)])
+            mask4.setImageResource(images[getImdex(step = 2)])
+        }
+    }
+    fun getImdex(plus : Boolean = true, step: Int): Int{
+        var res = currentIndex
+        if (plus){
+            return (currentIndex+step)%images.size
+        }else{
+            res = currentIndex-step
+            if (res<0) return images.size+res
+            else return res%images.size
+        }
+    }
+
     fun onSettingsClick(V: View){
         val intent = Intent(this@MainActivity, SettingsActivity::class.java)
         startActivity(intent)
@@ -204,6 +277,7 @@ class MainActivity : AppCompatActivity() {
             bMirror.setTextColor(Color.BLACK)
             b360.setTextColor(Color.WHITE)
         }
+        cameraMode = "photo"
     }
 
     fun on360Click(v: View){
@@ -228,6 +302,12 @@ class MainActivity : AppCompatActivity() {
             b360.setTextColor(Color.BLACK)
             bMirror.setTextColor(Color.WHITE)
         }
+        if (userViewModel.is360FirstLaunch){
+            val intent = Intent(this@MainActivity, Info360Activity::class.java)
+            userViewModel.is360FirstLaunch = false
+            startActivity(intent)
+        }
+        cameraMode = "video"
     }
 
     fun onFlipClick(v: View){
@@ -303,11 +383,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onCamShot(v: View){
-        if (!isInShot){
-            myCameras?.get(openedCamera)?.makePhoto()
-            isInShot = true
-        }else{
-            if (isCamStarted)startCam()
+        if (cameraMode == "photo") {
+            if (!isInShot) {
+                myCameras?.get(openedCamera)?.makePhoto()
+                isInShot = true
+            } else {
+                if (isCamStarted) startCam()
+            }
         }
     }
 
@@ -329,6 +411,15 @@ class MainActivity : AppCompatActivity() {
         private var mCaptureSession: CameraCaptureSession? = null
         private var characteristics: CameraCharacteristics? = null
         private var mImageReader: ImageReader? = null
+
+        //video
+        private var videoFile: File? = null
+        private val videoSize: Size = Size(1920, 1080)
+        private var mediaRecorder: MediaRecorder? = null
+        private var isRecording = false
+        private var isPrepared = false
+        private var recorderSurface : Surface? = null
+        var texture: SurfaceTexture? = null
 
         private val mFile: File = File(ctx.getExternalFilesDir(null), "mirrorImages/1.png")
         val isOpen: Boolean
@@ -366,6 +457,30 @@ class MainActivity : AppCompatActivity() {
         init {
             mCameraManager = cameraManager
             mCameraID = cameraID
+            val folder = File(ctx.getExternalFilesDir( "" ).toString()+ "/videos")
+            folder.mkdirs()
+            if (folder.exists()) {
+                videoFile = File(ctx.getExternalFilesDir( "" ).toString()+ "/videos/video.mp4")
+                //videoFile!!.createNewFile()
+                shohtButtin.setOnTouchListener { view, motionEvent ->
+                    when (motionEvent.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            if (isOpen && cameraMode == "video") {
+                                startRecording()
+                                true
+                            } else false
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            if (isOpen && cameraMode == "video") {
+                                stopRecording()
+                                true
+                            } else false
+                        }
+                        else -> false
+                    }
+
+                }
+            }
         }
 
         fun turnOnFlashlight(cameraManager: CameraManager) {
@@ -434,13 +549,14 @@ class MainActivity : AppCompatActivity() {
         private fun createCameraPreviewSession() {
             mImageReader = ImageReader.newInstance(1920,1080, ImageFormat.JPEG,1)
             mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener, null)
-                    val texture: SurfaceTexture? = mImageView.surfaceTexture
+                    texture = mImageView.surfaceTexture
                     // texture.setDefaultBufferSize(1920,1080);
                     val surface = Surface(texture)
                     try {
                         val builder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
                         builder.addTarget(surface)
-                        mCameraDevice!!.createCaptureSession(Arrays.asList(surface, mImageReader!!.surface),
+                        recorderSurface?.let { builder.addTarget(it) }
+                        mCameraDevice!!.createCaptureSession(Arrays.asList(surface, mImageReader!!.surface, recorderSurface!!),
                             object : CameraCaptureSession.StateCallback() {
                                 override fun onConfigured(session: CameraCaptureSession) {
                                     mCaptureSession = session
@@ -489,11 +605,47 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        private fun startRecording() {
+            //if (recorderSurface==null) return
+            try {
+                println("staaaaaaart")
+                mediaRecorder?.start()
+                isRecording = true
+            } catch (e: Exception) {
+                Log.e("Camera2", "Failed to start recording", e)
+            }
+        }
+
+        private fun stopRecording() {
+            try {
+                println("stooooooop")
+                if (isRecording) {
+                    mediaRecorder?.stop()
+                    mediaRecorder?.reset()
+                    mediaRecorder?.release()
+                    isRecording = false
+                    val intent = Intent(this@MainActivity, VideoActivity::class.java)
+                    intent.putExtra("imgPath", videoFile?.absolutePath)
+                    intent.putExtra("mode", "preview")
+                    startActivity(intent)
+                }
+            } catch (e: Exception) {
+                Log.e("Camera2", "Failed to stop recording", e)
+            }
+        }
+
         private val mOnImageAvailableListener: OnImageAvailableListener =
             object : OnImageAvailableListener {
                 override fun onImageAvailable(reader: ImageReader) {
                     run {
-                        mBackgroundHandler?.post(ImageSaver(reader.acquireNextImage(), mFile, ctx))
+                        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                            // Do the file write
+                        } else {
+                            // Request permission from the user
+                            ActivityCompat.requestPermissions(this@MainActivity,
+                                arrayOf( Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
+                        }
+                        mBackgroundHandler?.post(ImageSaver(reader.acquireNextImage(), mFile, BitmapFactory.decodeResource(resources ,images[currentIndex]), ctx))
                         Toast.makeText(
                             this@MainActivity,
                             "фотка доступна для сохранения",
@@ -510,6 +662,36 @@ class MainActivity : AppCompatActivity() {
                     isCamStarted = true
                     mCameraDevice = camera
                     Log.i("camerr", "Open camera  with id:" + mCameraDevice!!.id)
+                    if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                        // Do the file write
+                    } else {
+                        // Request permission from the user
+                        ActivityCompat.requestPermissions(this@MainActivity,
+                            arrayOf( Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
+                    }
+                    if (videoFile?.exists() == true) {
+                        println("fdfddgdgdg"+videoFile?.absolutePath)
+                        val mediaRecorder = MediaRecorder().apply {
+                            setAudioSource(MediaRecorder.AudioSource.MIC)
+                            setVideoSource(MediaRecorder.VideoSource.SURFACE)
+                            texture = texture
+                            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                            setVideoEncodingBitRate(10000000)
+                            setVideoFrameRate(30)
+                            setVideoSize(videoSize.width, videoSize.height)
+                            setVideoEncoder(MediaRecorder.VideoEncoder.H264)
+                            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                setOutputFile(videoFile!!)
+                            }else setOutputFile(videoFile?.absolutePath)
+                        }
+                        try {
+                            mediaRecorder!!.prepare()
+                        }catch (e: java.lang.Exception){
+                            println("prepareException: "+e.localizedMessage)
+                        }
+                        recorderSurface = mediaRecorder!!.surface
+                    }
                     createCameraPreviewSession()
                 }
 
@@ -525,7 +707,7 @@ class MainActivity : AppCompatActivity() {
             }
     }
 }
-private class ImageSaver internal constructor(image: Image, file: File, ctx: Context) : Runnable {
+private class ImageSaver internal constructor(image: Image, file: File, mask: Bitmap, ctx: Context) : Runnable {
     private var mFile: File = file
     private val mImage: Image = image
     private val ctx: Context = ctx
@@ -551,9 +733,13 @@ private class ImageSaver internal constructor(image: Image, file: File, ctx: Con
             }
             mFile = File(ctx.getExternalFilesDir(null), "mirrorImages/$newName")
             output = FileOutputStream(mFile)
-            output.write(bytes)
+            val img = combineImg(bytes, BitmapFactory.decodeResource(ctx.resources,R.drawable.transparent_retro_borders))
+            val stream = ByteArrayOutputStream()
+            img?.compress(Bitmap.CompressFormat.PNG, 90, stream)
+            val rbytes = stream.toByteArray()
+            output.write(rbytes)
         } catch (e: IOException) {
-            e.printStackTrace()
+            println("imgsaveErr"+e.localizedMessage)
         } finally {
             mImage.close()
             if (null != output) {
@@ -570,4 +756,12 @@ private class ImageSaver internal constructor(image: Image, file: File, ctx: Con
         }
     }
 
+    fun combineImg(back : ByteArray, front: Bitmap) : Bitmap?{
+        val myBitmap = BitmapFactory.decodeByteArray(back, 0, back.size, null)
+        val combinedBitmap = Bitmap.createBitmap(myBitmap.width, myBitmap.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(combinedBitmap)
+        canvas.drawBitmap(myBitmap, Rect(0,0, myBitmap.width, myBitmap.height), Rect(0, 0, myBitmap.width, myBitmap.height), null)
+        canvas.drawBitmap(front, Rect(0,0, front.width, front.height), Rect(0, 0, myBitmap.width, myBitmap.height), null)
+        return combinedBitmap
+    }
 }

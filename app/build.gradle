@@ -53,4 +53,13 @@ dependencies {
 
     //onboarding
     implementation("com.tbuonomo:dotsindicator:4.3")
+
+    //viewpager2
+    implementation 'androidx.viewpager2:viewpager2:1.0.0'
+
+    //admob
+    implementation 'com.google.android.gms:play-services-ads:21.5.0'
+
+    //GPBilling
+    implementation("com.android.billingclient:billing-ktx:4.1.0")
 }

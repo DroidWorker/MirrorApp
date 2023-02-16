@@ -8,12 +8,22 @@
     android:background="#000000"
     tools:context=".MainActivity">
 
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adViewMain"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:adSize="BANNER"
+        app:adUnitId="ca-app-pub-3940256099942544/6300978111"
+        app:layout_constraintEnd_toEndOf="@+id/buttonBacklight"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/imageContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/adViewMain">
 
         <TextureView
             android:id="@+id/mImageView"
@@ -23,6 +33,16 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/imageView6"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/transparent_retro_borders" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -97,7 +117,7 @@
         android:background="@drawable/rounded_white"
         android:onClick="onSettingsClick"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/adViewMain"
         app:srcCompat="@drawable/setting" />
 
     <ImageButton
@@ -109,7 +129,7 @@
         android:onClick="noAdsClick"
         app:layout_constraintEnd_toStartOf="@+id/buttonFlashlight"
         app:layout_constraintStart_toEndOf="@+id/button2"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/adViewMain"
         app:srcCompat="@drawable/noads" />
 
     <ImageButton
@@ -123,7 +143,7 @@
         android:textColor="#000000"
         app:backgroundTint="#FFFFFF"
         app:layout_constraintStart_toEndOf="@+id/imageButton"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/adViewMain"
         app:srcCompat="@drawable/mirror" />
 
     <ImageButton
@@ -137,7 +157,7 @@
         android:textColor="#000000"
         app:backgroundTint="#FFFFFF"
         app:layout_constraintEnd_toStartOf="@+id/buttonBacklight"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/adViewMain"
         app:srcCompat="@drawable/flashlight" />
 
     <ImageButton
@@ -151,11 +171,73 @@
         android:textColor="#000000"
         app:backgroundTint="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/adViewMain"
         app:srcCompat="@drawable/backlight" />
 
     <ImageButton
-        android:id="@+id/imageButton2"
+        android:id="@+id/mask4"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="16dp"
+        android:background="@android:color/transparent"
+        android:onClick="onMackClick"
+        app:layout_constraintBottom_toBottomOf="@+id/imageContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mask3"
+        app:srcCompat="@drawable/mask_default_4" />
+
+    <ImageButton
+        android:id="@+id/mask3"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="1dp"
+        android:layout_marginBottom="16dp"
+        android:background="@android:color/transparent"
+        android:onClick="onMackClick"
+        app:layout_constraintBottom_toBottomOf="@+id/imageContainer"
+        app:layout_constraintEnd_toStartOf="@+id/mask4"
+        app:layout_constraintStart_toEndOf="@+id/shotButton"
+        app:layout_constraintTop_toTopOf="@+id/shotButton"
+        app:srcCompat="@drawable/mask_default_3" />
+
+    <ImageButton
+        android:id="@+id/maskHidden"
+        android:layout_width="62dp"
+        android:layout_height="62dp"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="@id/shotButton"
+        app:layout_constraintEnd_toStartOf="@+id/mask3"
+        app:layout_constraintStart_toEndOf="@+id/mask2"
+        app:srcCompat="@drawable/mask_default_1" />
+
+    <ImageButton
+        android:id="@+id/mask2"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="16dp"
+        android:background="@android:color/transparent"
+        android:onClick="onMackClick"
+        app:layout_constraintBottom_toBottomOf="@+id/imageContainer"
+        app:layout_constraintEnd_toStartOf="@+id/shotButton"
+        app:layout_constraintStart_toEndOf="@+id/mask1"
+        app:layout_constraintTop_toTopOf="@+id/shotButton"
+        app:srcCompat="@drawable/mask_default_2" />
+
+    <ImageButton
+        android:id="@+id/mask1"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="16dp"
+        android:background="@android:color/transparent"
+        android:onClick="onMackClick"
+        app:layout_constraintBottom_toBottomOf="@+id/imageContainer"
+        app:layout_constraintEnd_toStartOf="@+id/mask2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/mask2"
+        app:srcCompat="@drawable/mask_default_1" />
+
+    <ImageButton
+        android:id="@+id/shotButton"
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:layout_marginBottom="16dp"
@@ -226,7 +308,7 @@
         android:layout_marginEnd="100dp"
         android:layout_marginBottom="32dp"
         android:thumb="@drawable/zoom"
-        app:layout_constraintBottom_toTopOf="@+id/imageButton2"
+        app:layout_constraintBottom_toTopOf="@+id/shotButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

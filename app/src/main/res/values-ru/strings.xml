@@ -6,10 +6,20 @@
     <string name="splash_text">Ты сегодня\nлучше всех ✨</string>
     <string name="onboarding_title_1">Зеркало \nв твоем кармане!</string>
     <string name="onboarding_subtitle_1">Брейся, поправляй макияж или надевай линзы где угодно</string>
+    <string name="onboarding_title_2">Даже если темно</string>
+    <string name="onboarding_subtitle_2">Включай режим подсветки и регулируй уровень освещения</string>
+    <string name="onboarding_title_3">Делай красивые селфи</string>
+    <string name="onboarding_subtitle_3">В приложении есть 18 рамок для красивых фотографий</string>
+    <string name="onboarding_title_4">Смотри на себя со всех сторон</string>
+    <string name="onboarding_subtitle_4">Снимай короткое видео в режиме 360° чтобы увидеть себя со всех сторон</string>
+    <string name="onboarding_title_5">Сделай идеальный макияж</string>
+    <string name="onboarding_subtitle_5">Супер зум для идеального контуринга</string>
+    <string name="onboarding_title_6">Бесплатный полный доступ</string>
+    <string name="onboarding_subtitle_6">Открой все маски и отключи рекламу на 3 дня бесплатно, потом 67 ₽ в месяц </string>
     <string name="later">Позже</string>
     <string name="recover">Восстановить</string>
     <string name="next">Далее</string>
-    <string name="start_free">start free</string>
+    <string name="start_free">Начать бесплатно</string>
     <string name="pp_start_text">Продолжая, я принимаю </string>
     <string name="privicy_text">и Политику конфеденциальности </string>
     <string name="terms_text">Пользовательское соглашение </string>
@@ -29,7 +39,7 @@
     <string name="sub_price1">3 дня бесплатно</string>
     <string name="subprice2">7 дней бесплатно</string>
     <string name="econ">Экономия 67%</string>
-    <string name="pay_description">3 дня бесплатно, затем 67 ₽/месяц</string>
+    <string name="pay_description">3 дня бесплатно, затем </string>
     <string name="pay_terms">Пользовательское соглашение</string>
     <string name="pay_policy">Политика конфеденциальности</string>
     <string name="title_360">Режим 360°</string>
@@ -52,8 +62,8 @@
     <string name="bsd_burger">Бургер</string>
     <string name="bsd_pizza">Пицца</string>
     <string name="bsd_dinner">Праздничный ужин</string>
-    <string name="bsdr_title">Оставить отзыв</string>
-    <string name="bsdr_hint">Напишите ваш отзыв</string>
+    <string name="bsdr_title">Расскажите нам подробнее</string>
+    <string name="bsdr_hint">Введите текст</string>
     <string name="bsdr_send">Отправить</string>
     <string name="bsdrate_title">Вам понравилось приложение?</string>
     <string name="yes">Да</string>
@@ -63,6 +73,7 @@
     <string name="bsdrate_bad_title">Пожалуйста, помогите нам улучшить приложение!</string>
     <string name="bsdrate_bad_description">Опишите, что вам не понравилось</string>
     <string name="rate_on_pm">Оценить на Google Play</string>
+    <string name="prem_masc">Премиальные маски:</string>
     <!--config-->
     <string name="splashType">splashTextRU</string>
 </resources>

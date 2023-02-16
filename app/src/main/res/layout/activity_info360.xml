@@ -43,7 +43,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/subtitle360"
-        tools:srcCompat="@drawable/mode" />
+        app:srcCompat="@drawable/mode" />
 
     <TextView
         android:id="@+id/description360"
@@ -67,7 +67,7 @@
         android:onClick="onClearClick"
         android:text="@string/clear"
         android:textColor="#000000"
-        android:textSize="24sp"
+        android:textSize="20sp"
         app:backgroundTint="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

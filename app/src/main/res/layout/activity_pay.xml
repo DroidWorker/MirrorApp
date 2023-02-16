@@ -31,120 +31,164 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/payTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="@string/pay_title"
-        android:textColor="#FFFFFF"
-        android:textSize="28sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/payLater" />
-
-    <TextView
-        android:id="@+id/paySubtitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/pay_subtitle"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/payTitle" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/p1"
+    <ScrollView
+        android:id="@+id/scrollView2"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@id/p2"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/paySubtitle">
+        android:layout_height="0dp"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@+id/constraintLayout7"
+        app:layout_constraintTop_toBottomOf="@+id/payLater"
+        tools:layout_editor_absoluteX="44dp">
 
-        <RadioButton
-            android:id="@+id/radioButton1"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/ttarifTitle1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/price1"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toTopOf="@+id/tarifSubtitle1"
-            app:layout_constraintStart_toEndOf="@+id/radioButton1"
-            app:layout_constraintTop_toTopOf="parent" />
+            <TextView
+                android:id="@+id/payTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="@string/pay_title"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp" />
 
-        <TextView
-            android:id="@+id/tarifSubtitle1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/sub_price1"
-            android:textColor="#CCFFFFFF"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/radioButton1"
-            app:layout_constraintTop_toBottomOf="@+id/ttarifTitle1" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <TextView
+                android:id="@+id/paySubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/pay_subtitle"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/p2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@id/constraintLayout7"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/p1">
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/p1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:background="@drawable/rounded_corners_off"
+                android:padding="8dp">
 
-        <RadioButton
-            android:id="@+id/radioButton2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+                <TextView
+                    android:id="@+id/ttarifTitle1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:text="@string/price1"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    app:layout_constraintBottom_toTopOf="@+id/tarifSubtitle1"
+                    app:layout_constraintStart_toEndOf="@+id/radioButton1"
+                    app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tarifTitle2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/price2"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toTopOf="@+id/tarifSubtitle2"
-            app:layout_constraintStart_toEndOf="@+id/radioButton2"
-            app:layout_constraintTop_toTopOf="parent" />
+                <TextView
+                    android:id="@+id/tarifSubtitle1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:text="@string/sub_price1"
+                    android:textColor="#CCFFFFFF"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/radioButton1"
+                    app:layout_constraintTop_toBottomOf="@+id/ttarifTitle1" />
 
-        <TextView
-            android:id="@+id/tarifSubtitle2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/subprice2"
-            android:textColor="#B3FFFFFF"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/radioButton2"
-            app:layout_constraintTop_toBottomOf="@+id/tarifTitle2" />
+                <RadioButton
+                    android:id="@+id/radioButton1"
+                    style="@style/MyRadioButtonStyle"
+                    android:layout_width="25dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="8dp"
+                    android:clickable="false"
+                    android:padding="3dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <TextView
-            android:id="@+id/tarifEcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/rounded_white"
-            android:text="@string/econ"
-            android:textColor="#000000"
-            android:textSize="12sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tarifTitle2" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/p2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/rounded_corners_off"
+                android:padding="8dp"
+                app:layout_constraintBottom_toTopOf="@id/constraintLayout7"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/p1">
+
+                <TextView
+                    android:id="@+id/tarifTitle2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:text="@string/price2"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    app:layout_constraintBottom_toTopOf="@+id/tarifSubtitle2"
+                    app:layout_constraintStart_toEndOf="@+id/radioButton2"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tarifSubtitle2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:text="@string/subprice2"
+                    android:textColor="#B3FFFFFF"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/radioButton2"
+                    app:layout_constraintTop_toBottomOf="@+id/tarifTitle2" />
+
+                <TextView
+                    android:id="@+id/tarifEcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_white"
+                    android:text="@string/econ"
+                    android:textColor="#000000"
+                    android:textSize="12sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/tarifTitle2" />
+
+                <RadioButton
+                    android:id="@+id/radioButton2"
+                    style="@style/MyRadioButtonStyle"
+                    android:layout_width="25dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="8dp"
+                    android:clickable="false"
+                    android:padding="13dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:id="@+id/textView7"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="14dp"
+                android:text="@string/prem_masc"
+                android:textColor="#F6F6F6" />
+
+            <com.kwork.mirrorapp.customView.ExpandableHeightGridView
+                android:id="@+id/mascView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:horizontalSpacing="10dp"
+                android:isScrollContainer="false"
+                android:numColumns="2"
+                android:overScrollMode="never"
+                android:scrollbars="none"
+                android:stretchMode="columnWidth"
+                android:verticalSpacing="10dp" />
+        </LinearLayout>
+    </ScrollView>
+
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout7"
@@ -153,7 +197,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/p2"
+        app:layout_constraintTop_toBottomOf="@+id/scrollView2"
         app:layout_constraintVertical_bias="0.82">
 
         <TextView
@@ -174,6 +218,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="@drawable/rounded_white"
+            android:onClick="subscribe"
             android:text="@string/start_free"
             android:textColor="#000000"
             app:backgroundTint="#FFFFFF"
@@ -187,6 +232,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
+            android:onClick="openPP"
             android:text="@string/pay_policy"
             android:textColor="#CCFFFFFF"
             android:textSize="12sp"
@@ -200,6 +246,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
+            android:onClick="openTerms"
             android:text="@string/pay_terms"
             android:textColor="#CCFFFFFF"
             android:textSize="12sp"

@@ -33,6 +33,26 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
             editor.putBoolean("isFirstLaunch", value)
             editor.apply()
         }
+    var is360FirstLaunch : Boolean
+        get() = sharedPreference.getBoolean("is360FirstLaunch", true)
+        set(value){
+            editor.putBoolean("is360FirstLaunch", value)
+            editor.apply()
+        }
+    var isADActive : Boolean
+        get() = sharedPreference.getBoolean("isADActive", true)
+        set(value){
+            editor.putBoolean("isADActive", value)
+            editor.apply()
+        }
+
+    var subscriptionType : String
+        get() = sharedPreference.getString("subscriptionType", "off")?: "off"
+        set(value){
+            editor.putString("subscriptionType", value)
+            editor.apply()
+        }
+
 
     fun addVote(type : String, value : Int){
         try {
@@ -70,5 +90,30 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
             }
         }
         return votes
+    }
+
+    fun loadTexts(){
+        val ref = firebase.getReference("texts")
+        ref.get().addOnSuccessListener {
+            var privacy = ""
+            var terms = ""
+            it.children.forEach{
+                if (it.key!=null&&it.key=="privacy") {
+                    privacy = it.value.toString()
+                }else if (it.key!=null&&it.key=="terms") {
+                    terms = it.value.toString()
+                }
+            }
+            editor.putString("privacy", privacy)
+            editor.putString("terms", terms)
+            editor.apply()
+        }.addOnFailureListener{
+            println("Errrrol loading")
+        }
+    }
+
+    fun getTexts(type: String) : String{
+        val text = sharedPreference.getString(type, null)//privacy or terms
+        return text ?: "<h1>......../404 NOT FOUND/.......</h1>"
     }
 }
