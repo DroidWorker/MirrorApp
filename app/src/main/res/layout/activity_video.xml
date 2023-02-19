@@ -16,7 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.kwork.mirrorapp.tools.TimelineView
+    <mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.TimelineView
         android:id="@+id/timelineView"
         android:layout_width="match_parent"
         android:layout_height="50dp"

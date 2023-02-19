@@ -73,6 +73,11 @@
     <string name="rate">Rate</string>
     <string name="rate_on_pm">Rate on Google Play</string>
     <string name="prem_masc">Premium masks:</string>
+    <string name="dialog_title">Delete highlighted?</string>
+    <string name="dialog_subtitle">No possibility of recovery</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_delete">Delete</string>
+    <string name="notification_access">access from the notification panel</string>
 
     <!--config-->
     <string name="splashType">splashTextEN</string>

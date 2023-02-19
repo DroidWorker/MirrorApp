@@ -8,7 +8,7 @@ android {
     compileSdk 32
 
     defaultConfig {
-        applicationId "com.kwork.mirrorapp"
+        applicationId "mirror.hand.makeup.shaving.best.zoom.pocket.selfie"
         minSdk 23
         targetSdk 30
         versionCode 1

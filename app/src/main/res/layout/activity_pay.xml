@@ -175,7 +175,7 @@
                 android:text="@string/prem_masc"
                 android:textColor="#F6F6F6" />
 
-            <com.kwork.mirrorapp.customView.ExpandableHeightGridView
+            <mirror.hand.makeup.shaving.best.zoom.pocket.selfie.customView.ExpandableHeightGridView
                 android:id="@+id/mascView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

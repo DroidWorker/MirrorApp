@@ -74,6 +74,11 @@
     <string name="bsdrate_bad_description">Опишите, что вам не понравилось</string>
     <string name="rate_on_pm">Оценить на Google Play</string>
     <string name="prem_masc">Премиальные маски:</string>
+    <string name="dialog_title">Удалить выделенное?</string>
+    <string name="dialog_subtitle">Без возможности восстановления</string>
+    <string name="dialog_cancel">Отмена</string>
+    <string name="dialog_delete">Удалить</string>
+    <string name="notification_access">доступ из панели уведомлений</string>
     <!--config-->
     <string name="splashType">splashTextRU</string>
 </resources>

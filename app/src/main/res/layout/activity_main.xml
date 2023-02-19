@@ -35,9 +35,10 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-            android:id="@+id/imageView6"
+            android:id="@+id/overmaskView"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            android:scaleType="fitXY"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -106,6 +107,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/app_icon" />
+
+        <ImageButton
+            android:id="@+id/info360Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:background="@android:color/transparent"
+            android:onClick="onInfo360Click"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/icon_info_white" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageButton
@@ -184,7 +199,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/imageContainer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/mask3"
-        app:srcCompat="@drawable/mask_default_4" />
+        app:srcCompat="@drawable/preview_gold_frame" />
 
     <ImageButton
         android:id="@+id/mask3"
@@ -198,7 +213,7 @@
         app:layout_constraintEnd_toStartOf="@+id/mask4"
         app:layout_constraintStart_toEndOf="@+id/shotButton"
         app:layout_constraintTop_toTopOf="@+id/shotButton"
-        app:srcCompat="@drawable/mask_default_3" />
+        app:srcCompat="@drawable/preview_christmas_tree" />
 
     <ImageButton
         android:id="@+id/maskHidden"
@@ -208,7 +223,7 @@
         app:layout_constraintBottom_toBottomOf="@id/shotButton"
         app:layout_constraintEnd_toStartOf="@+id/mask3"
         app:layout_constraintStart_toEndOf="@+id/mask2"
-        app:srcCompat="@drawable/mask_default_1" />
+        app:srcCompat="@drawable/preview_none" />
 
     <ImageButton
         android:id="@+id/mask2"
@@ -221,7 +236,7 @@
         app:layout_constraintEnd_toStartOf="@+id/shotButton"
         app:layout_constraintStart_toEndOf="@+id/mask1"
         app:layout_constraintTop_toTopOf="@+id/shotButton"
-        app:srcCompat="@drawable/mask_default_2" />
+        app:srcCompat="@drawable/preview_hearts" />
 
     <ImageButton
         android:id="@+id/mask1"
@@ -234,7 +249,7 @@
         app:layout_constraintEnd_toStartOf="@+id/mask2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/mask2"
-        app:srcCompat="@drawable/mask_default_1" />
+        app:srcCompat="@drawable/preview_pixel_hearts" />
 
     <ImageButton
         android:id="@+id/shotButton"
@@ -307,6 +322,8 @@
         android:layout_marginStart="100dp"
         android:layout_marginEnd="100dp"
         android:layout_marginBottom="32dp"
+        android:min="1"
+        android:max="90"
         android:thumb="@drawable/zoom"
         app:layout_constraintBottom_toTopOf="@+id/shotButton"
         app:layout_constraintEnd_toEndOf="parent"
