@@ -79,6 +79,10 @@
     <string name="dialog_cancel">Отмена</string>
     <string name="dialog_delete">Удалить</string>
     <string name="notification_access">доступ из панели уведомлений</string>
+    <string name="survey1">Вам нравится зеркало?</string>
+    <string name="survey2">Поставите нам оценку?</string>
+    <string name="survey3">Расскажите почему?</string>
+    <string name="okey">Хорошо</string>
     <!--config-->
     <string name="splashType">splashTextRU</string>
 </resources>

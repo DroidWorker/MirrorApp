@@ -25,40 +25,52 @@
             android:value="ca-app-pub-3940256099942544~3347511713"/>
         <activity
             android:name=".VideoActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".LongTextActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".FullscreenActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".GalleryActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".SettingsActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".Info360Activity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".PayActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".CameraAccessActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".PollActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".OnboardingActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".SplashActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:theme="@style/Theme.MirrorApp.NoActionBar" />
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -66,6 +78,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".tools.NotificationReceiver"
+            android:enabled="true"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

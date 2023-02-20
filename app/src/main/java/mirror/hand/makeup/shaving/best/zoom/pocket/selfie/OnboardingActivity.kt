@@ -62,8 +62,10 @@ class OnboardingActivity : AppCompatActivity() {
                 }
             }
             else {
-                //TODO("end onboarding")
+                val intent = Intent(this@OnboardingActivity, PayActivity::class.java)
+                intent.putExtra("showVote", true)
                 finish()
+                startActivity(intent)
                 return@OnClickListener
             }
             if (adapter.currentItem==5){

@@ -57,6 +57,13 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
             editor.apply()
         }
 
+    var adBannerTimer : Int
+    get() = sharedPreference.getInt("adBannerTimer", 15)
+    set(value){
+        editor.putInt("adBannerTimer", value)
+        editor.apply()
+    }
+
 
     fun addVote(type : String, value : Int){
         try {

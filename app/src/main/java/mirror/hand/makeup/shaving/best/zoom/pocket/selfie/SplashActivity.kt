@@ -14,13 +14,19 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
+import android.widget.RemoteViews
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.SkuType.SUBS
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.NotificationReceiver
 
 
 class SplashActivity : AppCompatActivity() {
@@ -37,6 +43,12 @@ class SplashActivity : AppCompatActivity() {
         //loading data
         viewModel.loadVotes()
         viewModel.loadTexts()
+        val remoteConfig: FirebaseRemoteConfig = Firebase.remoteConfig
+        val configSettings = remoteConfigSettings {
+            minimumFetchIntervalInSeconds = 3600
+        }
+        remoteConfig.setConfigSettingsAsync(configSettings)
+        viewModel.adBannerTimer=(remoteConfig.getLong("adBannerTimer").toInt())
 
         //syncronizedGP
         val purchasesUpdatedListener =
@@ -79,11 +91,23 @@ class SplashActivity : AppCompatActivity() {
             val pendingIntent =
                 PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
+            val intentClose = Intent(this, NotificationReceiver::class.java).apply {
+                action = "mirror.hand.makeup.shaving.best.zoom.pocket.selfie.notification.ACTION_CLOSE"
+                putExtra("notification_id", notificationId)
+            }
+
+            val pendingIntentClose = PendingIntent.getBroadcast(this, 0, intentClose, PendingIntent.FLAG_UPDATE_CURRENT)
+
+            val remoteViews = RemoteViews(packageName, R.layout.notification)
+            remoteViews.setTextViewText(R.id.notText, "Нажмите, чтобы открыть")
+            remoteViews.setOnClickPendingIntent(R.id.root, pendingIntent)
+            remoteViews.setOnClickPendingIntent(R.id.imageButton2, pendingIntentClose)
 // Создаем уведомление
             val builder = NotificationCompat.Builder(this, "appMirrorChannel")
                 .setSmallIcon(R.drawable.app_icon)
                 .setContentTitle("BeauttyMirror")
-                .setContentText("Нажмите, чтобы открыть")
+                .setCustomContentView(remoteViews)
+                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(false) // флаг, который делает уведомление невозможным для закрытия свайпом
@@ -104,7 +128,6 @@ class SplashActivity : AppCompatActivity() {
                 override fun onAnimationStart(animation: Animation) {}
                 override fun onAnimationEnd(animation: Animation) {
                     finish()
-                    overridePendingTransition(R.anim.diagonal,R.anim.alpha)
                 }
 
                 override fun onAnimationRepeat(animation: Animation) {}
@@ -123,7 +146,6 @@ class SplashActivity : AppCompatActivity() {
             override fun onAnimationStart(animation: Animation) {}
             override fun onAnimationEnd(animation: Animation) {
                 finish()
-                overridePendingTransition(R.anim.diagonal,R.anim.alpha)
             }
 
             override fun onAnimationRepeat(animation: Animation) {}

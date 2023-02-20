@@ -8,7 +8,7 @@
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/notText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/bsd_title"
@@ -30,7 +30,7 @@
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/notText" />
 
     <TextView
         android:id="@+id/bsdCupofCoffee"

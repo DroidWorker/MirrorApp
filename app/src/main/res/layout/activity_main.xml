@@ -8,22 +8,79 @@
     android:background="#000000"
     tools:context=".MainActivity">
 
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/adViewMain"
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clTop"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:adSize="BANNER"
-        app:adUnitId="ca-app-pub-3940256099942544/6300978111"
-        app:layout_constraintEnd_toEndOf="@+id/buttonBacklight"
+        android:background="#FFFFFF"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.gms.ads.AdView
+            android:id="@+id/adViewMain"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:adSize="BANNER"
+            app:adUnitId="ca-app-pub-3940256099942544/6300978111"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView12"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/survey1"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/clear"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/rounded_blck"
+            android:onClick="onsurvayClickOk"
+            android:paddingLeft="4dp"
+            android:paddingTop="0dp"
+            android:paddingRight="4dp"
+            android:paddingBottom="0dp"
+            android:text="@string/yes"
+            android:textAlignment="center"
+            android:textAllCaps="false"
+            android:textColor="#ffffff"
+            android:textSize="14sp"
+            android:visibility="invisible"
+            app:backgroundTint="@color/black"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/closeAdDialog"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/closeAdDialog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:background="@android:color/transparent"
+            android:onClick="onSurvayClickNo"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/adViewMain"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/admob_close_button_white_circle_black_cross" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/imageContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/adViewMain">
+        app:layout_constraintTop_toBottomOf="@id/clTop">
 
         <TextureView
             android:id="@+id/mImageView"
@@ -132,7 +189,7 @@
         android:background="@drawable/rounded_white"
         android:onClick="onSettingsClick"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/adViewMain"
+        app:layout_constraintTop_toBottomOf="@id/clTop"
         app:srcCompat="@drawable/setting" />
 
     <ImageButton
@@ -144,7 +201,7 @@
         android:onClick="noAdsClick"
         app:layout_constraintEnd_toStartOf="@+id/buttonFlashlight"
         app:layout_constraintStart_toEndOf="@+id/button2"
-        app:layout_constraintTop_toBottomOf="@id/adViewMain"
+        app:layout_constraintTop_toBottomOf="@id/clTop"
         app:srcCompat="@drawable/noads" />
 
     <ImageButton
@@ -158,7 +215,7 @@
         android:textColor="#000000"
         app:backgroundTint="#FFFFFF"
         app:layout_constraintStart_toEndOf="@+id/imageButton"
-        app:layout_constraintTop_toBottomOf="@id/adViewMain"
+        app:layout_constraintTop_toBottomOf="@id/clTop"
         app:srcCompat="@drawable/mirror" />
 
     <ImageButton
@@ -172,7 +229,7 @@
         android:textColor="#000000"
         app:backgroundTint="#FFFFFF"
         app:layout_constraintEnd_toStartOf="@+id/buttonBacklight"
-        app:layout_constraintTop_toBottomOf="@id/adViewMain"
+        app:layout_constraintTop_toBottomOf="@id/clTop"
         app:srcCompat="@drawable/flashlight" />
 
     <ImageButton
@@ -186,7 +243,7 @@
         android:textColor="#000000"
         app:backgroundTint="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/adViewMain"
+        app:layout_constraintTop_toBottomOf="@id/clTop"
         app:srcCompat="@drawable/backlight" />
 
     <ImageButton

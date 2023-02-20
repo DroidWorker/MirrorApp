@@ -19,6 +19,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.android.billingclient.api.*
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.NotificationReceiver
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.SmoothBottomSheetDialog
 
 
@@ -61,12 +62,24 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                     val pendingIntent =
                         PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
+                    val intentClose = Intent(this, NotificationReceiver::class.java).apply {
+                        action = "mirror.hand.makeup.shaving.best.zoom.pocket.selfie.notification.ACTION_CLOSE"
+                        putExtra("notification_id", notificationId)
+                    }
+
+                    val pendingIntentClose = PendingIntent.getBroadcast(this, 0, intentClose, PendingIntent.FLAG_UPDATE_CURRENT)
+
+                    val remoteViews = RemoteViews(packageName, R.layout.notification)
+                    remoteViews.setTextViewText(R.id.notText, "Нажмите, чтобы открыть")
+                    remoteViews.setOnClickPendingIntent(R.id.root, pendingIntent)
+                    remoteViews.setOnClickPendingIntent(R.id.imageButton2, pendingIntentClose)
+
                     val builder = NotificationCompat.Builder(this, "appMirrorChannel")
                         .setSmallIcon(R.drawable.app_icon)
-                        .setContentTitle("BeauttyMirror")
-                        .setContentText("Нажмите, чтобы открыть")
+                        .setContentTitle("BeautyMirror")
+                        .setCustomContentView(remoteViews)
+                        .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                         .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .setContentIntent(pendingIntent)
                         .setAutoCancel(false) // флаг, который делает уведомление невозможным для закрытия свайпом
                         .setOngoing(true) // флаг, который делает уведомление невозможным для закрытия пользователем
 
@@ -112,6 +125,11 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         dinner?.setOnClickListener{subscribe()}
 
         bottomSheetDialog.show()
+    }
+
+    fun onBuyPremClick(v: View){
+        val intent = Intent(this@SettingsActivity, PayActivity::class.java)
+        startActivity(intent)
     }
 
     fun onReviewClick(v: View){

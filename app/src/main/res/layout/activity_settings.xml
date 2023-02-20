@@ -87,6 +87,7 @@
         android:layout_height="wrap_content"
         android:drawableLeft="@drawable/no_ads"
         android:drawablePadding="14dp"
+        android:onClick="onBuyPremClick"
         android:text="@string/buy_prem"
         android:textColor="#FFFFFF"
         android:textSize="16sp"

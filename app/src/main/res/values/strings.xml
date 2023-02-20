@@ -78,6 +78,10 @@
     <string name="dialog_cancel">Cancel</string>
     <string name="dialog_delete">Delete</string>
     <string name="notification_access">access from the notification panel</string>
+    <string name="survey1">Do you like “Hand mirror”?</string>
+    <string name="survey2">Rate us?</string>
+    <string name="survey3">Tell us why?</string>
+    <string name="okey">Okey!</string>
 
     <!--config-->
     <string name="splashType">splashTextEN</string>

@@ -23,9 +23,13 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
 
     lateinit var billingClient : BillingClient
 
+    var showVote = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pay)
+
+        showVote = intent.getBooleanExtra("showVote", false)
 
         //syncronizedGP
         val purchasesUpdatedListener =
@@ -89,6 +93,14 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
         val intent = Intent(this@PayActivity, LongTextActivity::class.java)
         intent.putExtra("type", "terms")
         startActivity(intent)
+    }
+
+    fun onLaterClick(v: View){
+        if (showVote) {
+            val intent = Intent(this@PayActivity, PollActivity::class.java)
+            startActivity(intent)
+        }
+        finish()
     }
 
     private fun startConnection(billingClient : BillingClient) {

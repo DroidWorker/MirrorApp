@@ -2,6 +2,7 @@ package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
 import android.Manifest
 import android.Manifest.permission.CAMERA
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,16 +13,14 @@ import android.media.Image
 import android.media.ImageReader
 import android.media.ImageReader.OnImageAvailableListener
 import android.media.MediaRecorder
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.util.Size
-import android.view.MotionEvent
-import android.view.Surface
-import android.view.TextureView
-import android.view.View
+import android.view.*
 import android.view.animation.AnimationUtils
 import android.view.animation.TranslateAnimation
 import android.widget.*
@@ -35,12 +34,17 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
+import com.google.android.material.button.MaterialButton
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.GestureListener
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.SmoothBottomSheetDialog
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.Timer
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.sql.Time
 import java.util.*
 
 
@@ -56,6 +60,8 @@ class MainActivity : AppCompatActivity() {
 
     private var mBackgroundThread: HandlerThread? = null
     private var mBackgroundHandler: Handler? = null
+
+    private lateinit var gestureDetector: GestureDetector
 
     var myCameras: ArrayList<CameraService>? = null
     var openedCamera = 1
@@ -80,6 +86,8 @@ class MainActivity : AppCompatActivity() {
     var currentIndex = 9
     var currentMask = R.drawable.transparent_retro_borders
 
+    var dialogStep = 1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ViewModelProvider(this)[MainViewModel::class.java]
@@ -97,6 +105,50 @@ class MainActivity : AppCompatActivity() {
         maskHidden = findViewById(R.id.maskHidden)
         mask3 = findViewById(R.id.mask3)
         mask4 = findViewById(R.id.mask4)
+
+        //adTimer
+        if (!Timer.isStarted)Timer.startTimer((userViewModel.adBannerTimer*60000).toLong())
+        Timer.listener = {
+            findViewById<AdView>(R.id.adViewMain).visibility = View.GONE
+            findViewById<TextView>(R.id.textView12).visibility = View.VISIBLE
+            findViewById<MaterialButton>(R.id.clear).visibility = View.VISIBLE
+            findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.VISIBLE
+        }
+
+        // Создаем GestureDetector
+        val gestureListener = GestureListener()
+        gestureListener.swipeRight = {
+            onMackClick(mask1)
+        }
+        gestureListener.swipeLeft = {
+            onMackClick(mask4)
+        }
+        gestureListener.click = {
+            onMackClick(gestureListener.lastClickedView!!)
+        }
+        gestureDetector = GestureDetector(this, gestureListener)
+
+        // Назначаем OnTouchListener для ConstraintLayout
+        mask1.setOnTouchListener { _, event ->
+            gestureListener.lastClickedView = mask1
+            gestureDetector.onTouchEvent(event)
+            true
+        }
+        mask2.setOnTouchListener { _, event ->
+            gestureListener.lastClickedView = mask2
+            gestureDetector.onTouchEvent(event)
+            true
+        }
+        mask3.setOnTouchListener { _, event ->
+            gestureListener.lastClickedView = mask3
+            gestureDetector.onTouchEvent(event)
+            true
+        }
+        mask4.setOnTouchListener { _, event ->
+            gestureListener.lastClickedView = mask4
+            gestureDetector.onTouchEvent(event)
+            true
+        }
 
         val seekBar = findViewById<SeekBar>(R.id.brightnessSeekBar)
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -214,6 +266,69 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun onsurvayClickOk(v: View){
+        if (dialogStep==1){
+            dialogStep=2
+            findViewById<TextView>(R.id.textView12).text = resources.getString(R.string.survey2)
+            findViewById<Button>(R.id.clear).text = resources.getString(R.string.okey)
+        }
+        else if(dialogStep==2){
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+            } catch (e: ActivityNotFoundException) {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+            }
+        }else{
+            //feedback
+            val bottomSheetDialog = SmoothBottomSheetDialog(this)
+            bottomSheetDialog.setContentView(R.layout.bottom_sheet_dialog_review)
+
+            val clMain = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.constraintLayoutMain)
+            val cllist1 = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.qlist1)
+            val text = bottomSheetDialog.findViewById<EditText>(R.id.BSDReditText)
+            val send = bottomSheetDialog.findViewById<Button>(R.id.BSDRsend)
+
+            cllist1?.visibility = View.GONE
+            clMain?.visibility = View.VISIBLE
+
+            send?.setOnClickListener{
+                if (text?.text!!.length>2){
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:")
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf("test@test.test"))
+                        putExtra(Intent.EXTRA_SUBJECT, "Обращение пользователя AppMirror")
+                        putExtra(Intent.EXTRA_TEXT, "")
+                    }
+                    if (intent.resolveActivity(this.packageManager) != null) {
+                        this.startActivity(intent)
+                    } else {
+                        Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                bottomSheetDialog.hide()
+            }
+            findViewById<AdView>(R.id.adViewMain).visibility = View.VISIBLE
+            findViewById<TextView>(R.id.textView12).visibility = View.GONE
+            findViewById<MaterialButton>(R.id.clear).visibility = View.GONE
+            findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.GONE
+            bottomSheetDialog.show()
+        }
+    }
+
+    fun onSurvayClickNo(v: View){
+        if (dialogStep!=3){
+            dialogStep=3
+            findViewById<TextView>(R.id.textView12).text = resources.getString(R.string.survey3)
+            findViewById<Button>(R.id.clear).text = resources.getString(R.string.okey)
+        }else{
+            findViewById<AdView>(R.id.adViewMain).visibility = View.VISIBLE
+            findViewById<TextView>(R.id.textView12).visibility = View.GONE
+            findViewById<MaterialButton>(R.id.clear).visibility = View.GONE
+            findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.GONE
+            Timer.startTimer((userViewModel.adBannerTimer*60000).toLong())
+        }
+    }
+
     fun onMackClick(v: View){
         val mascArray : List<Int>
         val mascPreviewArray: List<Int>
@@ -304,7 +419,7 @@ class MainActivity : AppCompatActivity() {
                 R.drawable.preview_film_rec
             )
         }
-        if(v.id==R.id.mask1||v.id==R.id.mask2) {
+        if(v.id==R.id.mask3||v.id==R.id.mask4) {
             val animation = AnimationUtils.loadAnimation(this, R.anim.slide_mask)
             mask1.startAnimation(animation)
             mask2.startAnimation(animation)
@@ -333,6 +448,7 @@ class MainActivity : AppCompatActivity() {
         }
         val omaskView = findViewById<ImageView>(R.id.overmaskView)
         omaskView.setImageResource(mascArray[currentIndex])
+        currentMask = mascArray[currentIndex]
     }
     fun getImdex(plus : Boolean = true, step: Int, size: Int): Int{
         var res = currentIndex
@@ -681,6 +797,15 @@ class MainActivity : AppCompatActivity() {
                                 val maxZoom =
                                     characteristics!!.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)!!
 
+                                if (progress in 0..25)
+                                    seekBar?.thumb = ContextCompat.getDrawable(this@MainActivity, R.drawable.zoom)
+                                else if (progress in 26..50)
+                                    seekBar?.thumb = ContextCompat.getDrawable(this@MainActivity, R.drawable.zoomx)
+                                else if (progress in 51..75)
+                                    seekBar?.thumb = ContextCompat.getDrawable(this@MainActivity, R.drawable.zoomxx)
+                                else if (progress in 76..100)
+                                    seekBar?.thumb = ContextCompat.getDrawable(this@MainActivity, R.drawable.zoomxxx)
+
                                 if (maxZoom == 0f) {
                                     return
                                 }
@@ -759,7 +884,7 @@ class MainActivity : AppCompatActivity() {
                     ) {
                     }
                 }
-                //mCaptureSession!!.stopRepeating()
+                mCaptureSession!!.stopRepeating()
                 //mCaptureSession!!.abortCaptures()
                 mCaptureSession!!.capture(captureBuilder.build(), CaptureCallback, null)
             } catch (e: CameraAccessException) {
@@ -808,12 +933,6 @@ class MainActivity : AppCompatActivity() {
                                 arrayOf( Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
                         }
                         mBackgroundHandler?.post(ImageSaver(reader.acquireNextImage(), mFile, BitmapFactory.decodeResource(resources ,currentMask), ctx))
-                        Toast.makeText(
-                            this@MainActivity,
-                            "фотка доступна для сохранения",
-                            Toast.LENGTH_SHORT
-                        )
-                            .show()
                     }
                 }
             }
@@ -870,6 +989,7 @@ class MainActivity : AppCompatActivity() {
 }
 private class ImageSaver internal constructor(image: Image, file: File, mask: Bitmap, ctx: Context) : Runnable {
     private var mFile: File = file
+    private val mask = mask
     private val mImage: Image = image
     private val ctx: Context = ctx
     override fun run() {
@@ -879,6 +999,7 @@ private class ImageSaver internal constructor(image: Image, file: File, mask: Bi
         var output: FileOutputStream? = null
         try {
             val folder = File(ctx.getExternalFilesDir(null), "mirrorImages")
+            if(!folder.exists()) folder.mkdir()
             var newName = "1.png"
             var index = 0
             if (folder.exists()) {
@@ -894,7 +1015,7 @@ private class ImageSaver internal constructor(image: Image, file: File, mask: Bi
             }
             mFile = File(ctx.getExternalFilesDir(null), "mirrorImages/$newName")
             output = FileOutputStream(mFile)
-            val img = combineImg(bytes, BitmapFactory.decodeResource(ctx.resources,R.drawable.transparent_retro_borders))
+            val img = combineImg(bytes, mask)
             val stream = ByteArrayOutputStream()
             img?.compress(Bitmap.CompressFormat.PNG, 90, stream)
             val rbytes = stream.toByteArray()
