@@ -133,6 +133,7 @@
         android:layout_marginBottom="24dp"
         android:drawableLeft="@drawable/other_app"
         android:drawablePadding="14dp"
+        android:onClick="onOtherAppsClick"
         android:text="@string/other_app"
         android:textColor="#FFFFFF"
         android:textSize="16sp"

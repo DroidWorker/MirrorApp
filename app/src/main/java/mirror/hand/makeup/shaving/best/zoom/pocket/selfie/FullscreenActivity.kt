@@ -1,30 +1,36 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaScannerConnection
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
+import com.google.android.material.color.utilities.Score.score
 import java.io.ByteArrayOutputStream
 import java.io.File
+
 
 class FullscreenActivity : AppCompatActivity() {
     var saveImg = false
     lateinit var mode : String
     private var path: String?  = null
+    lateinit var ctx : Context
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.layout.activity_fullscreen)
+        ctx = this
         path = intent.getStringExtra("imgPath")
         mode = intent.getStringExtra("mode") ?: "default"
 
@@ -59,9 +65,17 @@ class FullscreenActivity : AppCompatActivity() {
                 null
             ) { _, uri ->
                 // сохранение uri в галерее выполнено успешно
+                runOnUiThread {
+                    val toast = Toast.makeText(ctx, "Изображение сохранено", Toast.LENGTH_SHORT)
+                    toast.show()
+                    finish()
+                }
             }
         }
         saveImg = true
+        val toast = Toast.makeText(ctx, "Изображение сохранено", Toast.LENGTH_SHORT)
+        toast.show()
+        finish()
     }
 
     fun onBackClick(v : View){
@@ -80,13 +94,21 @@ class FullscreenActivity : AppCompatActivity() {
     }
 
     private fun shareImage(bitmap: Bitmap) {
-        val intent = Intent(Intent.ACTION_SEND).setType("image/*")
         val bytes = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
-        val path = MediaStore.Images.Media.insertImage(applicationContext.contentResolver, bitmap, "tempimage", null)
+        val path: String = MediaStore.Images.Media.insertImage(
+            this.contentResolver,
+            bitmap,
+            "sImg",
+            null
+        )
         val uri = Uri.parse(path)
-        intent.putExtra(Intent.EXTRA_STREAM, uri)
-        startActivity(intent)
+        val shareIntent = Intent()
+        shareIntent.action = Intent.ACTION_SEND
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+        shareIntent.type = "image/*"
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivity(Intent.createChooser(shareIntent, "send"))
     }
 
 }

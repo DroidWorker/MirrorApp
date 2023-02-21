@@ -57,12 +57,33 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
             editor.apply()
         }
 
+    var shareAppString : String
+        get() = sharedPreference.getString("shareAppString", "Error")?: "Error"
+        set(value){
+            editor.putString("shareAppString", value)
+            editor.apply()
+        }
+
+    var myAppsString : String
+        get() = sharedPreference.getString("myAppsString", "Error")?: "Error"
+        set(value){
+            editor.putString("myAppsString", value)
+            editor.apply()
+        }
+
     var adBannerTimer : Int
     get() = sharedPreference.getInt("adBannerTimer", 15)
     set(value){
         editor.putInt("adBannerTimer", value)
         editor.apply()
     }
+
+    var lastImagePath : String
+        get() = sharedPreference.getString("lastImagePath", "err") ?: "err"
+        set(value){
+            editor.putString("lastImagePath", value)
+            editor.apply()
+        }
 
 
     fun addVote(type : String, value : Int){
@@ -126,5 +147,23 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     fun getTexts(type: String) : String{
         val text = sharedPreference.getString(type, null)//privacy or terms
         return text ?: "<h1>......../404 NOT FOUND/.......</h1>"
+    }
+
+    fun getShareAppLink(){
+        val ref = firebase.getReference("shareAppLink")
+        ref.get().addOnSuccessListener {
+            shareAppString = it.value.toString()
+        }.addOnFailureListener{
+            println("Errrrol loading")
+        }
+    }
+
+    fun getMyAppsLink(){
+        val ref = firebase.getReference("myAppsLink")
+        ref.get().addOnSuccessListener {
+            myAppsString = it.value.toString()
+        }.addOnFailureListener{
+            println("Errrrol loading")
+        }
     }
 }

@@ -155,7 +155,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
     private fun initiatePurchase() {
         println("stttteeeep2")
         val skuList: MutableList<String> = ArrayList()
-        skuList.add("android.test.purchased")
+        skuList.add("mons67r")
         val params = SkuDetailsParams.newBuilder()
         params.setSkusList(skuList).setType(BillingClient.SkuType.SUBS)
         val billingResult = billingClient!!.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
@@ -204,7 +204,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
     fun handlePurchases(purchases: List<Purchase>) {
         for (purchase in purchases) {
             //if item is purchased
-            if (purchase.skus.contains("android.test.purchased") && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+            if (purchase.skus.contains("mons67r") && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
 
                 // else purchase is valid
                 //if item is purchased and not acknowledged
@@ -222,10 +222,10 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
                         recreate()
                     }
                 }
-            } else if (purchase.skus.contains("android.test.purchased") && purchase.purchaseState == Purchase.PurchaseState.PENDING) {
+            } else if (purchase.skus.contains("mons67r") && purchase.purchaseState == Purchase.PurchaseState.PENDING) {
                 Toast.makeText(applicationContext,
                     "Purchase is Pending. Please complete Transaction", Toast.LENGTH_SHORT).show()
-            } else if (purchase.skus.contains("android.test.purchased") && purchase.purchaseState == Purchase.PurchaseState.UNSPECIFIED_STATE) {
+            } else if (purchase.skus.contains("mons67r") && purchase.purchaseState == Purchase.PurchaseState.UNSPECIFIED_STATE) {
                 viewModel.subscriptionType = "week"
                 viewModel.isADActive = false
                 Toast.makeText(applicationContext, "Purchase Status Unknown", Toast.LENGTH_SHORT).show()

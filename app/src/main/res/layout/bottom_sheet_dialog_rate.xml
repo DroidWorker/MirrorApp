@@ -177,6 +177,7 @@
             android:paddingRight="8dp"
             android:textColor="#FFFFFF"
             android:textColorHint="#CCFFFFFF"
+            android:textCursorDrawable="@null"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

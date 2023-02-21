@@ -91,9 +91,9 @@ class GalleryActivity : AppCompatActivity() {
 
     fun onShareClick(v: View){
         var sendArr: ArrayList<Uri> = ArrayList()
-        imgs.keys.forEach{
-            val file = File(it)
-            sendArr.add(FileProvider.getUriForFile(this, "${this.packageName}.provider", file))
+        selectedItems.forEach{
+            val file = adapter.getItemPath(it)?.let { it1 -> File(it1) }
+            if (file!=null) sendArr.add(FileProvider.getUriForFile(this, "${this.packageName}.provider", file))
         }
 
         val intent = Intent().apply {
@@ -106,8 +106,8 @@ class GalleryActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun onSaveGalleryClick(v: View){
-        imgs.values.forEach{
-            MediaStore.Images.Media.insertImage(getContentResolver(), it, "HM"+ Instant.now() , "created by HandMirror")
+        selectedItems.forEach{
+            MediaStore.Images.Media.insertImage(getContentResolver(), imgs[adapter.getItemPath(it)], "HM"+ Instant.now() , "created by HandMirror")
         }
         Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
     }

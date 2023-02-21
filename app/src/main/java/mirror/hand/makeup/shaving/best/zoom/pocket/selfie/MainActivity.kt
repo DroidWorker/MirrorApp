@@ -30,6 +30,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
@@ -44,7 +45,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
-import java.sql.Time
 import java.util.*
 
 
@@ -188,6 +188,10 @@ class MainActivity : AppCompatActivity() {
             MobileAds.initialize(
                 this
             ) { }
+            //синхронизируем с галереей
+            if(userViewModel.lastImagePath!="err") {
+                findViewById<ImageView>(R.id.openGalery).setImageURI(Uri.fromFile(File(userViewModel.lastImagePath)))
+            }
             val mAdView :AdView = findViewById(R.id.adViewMain)
             val adRequest = AdRequest.Builder().build()
             mAdView.loadAd(adRequest)
@@ -202,8 +206,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        myCameras?.get(openedCamera)?.closeCamera()
+        if(myCameras?.size!! >= openedCamera)myCameras?.get(openedCamera)?.closeCamera()
         isCamStarted=false
+        isInShot = false
         stopBackgroundThread()
     }
 
@@ -620,7 +625,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun adjustBacklight(seekBar: SeekBar) {
-        val light = seekBar.progress
+        val light = seekBar.progress+100
         imageContainer.setPadding(light)
     }
 
@@ -633,7 +638,7 @@ class MainActivity : AppCompatActivity() {
 
         //video
         private var videoFile: File? = null
-        private val videoSize: Size = Size(1920, 1080)
+        private val videoSize: Size = Size(1080, 1920)
         private var mediaRecorder: MediaRecorder? = null
         private var isRecording = false
         private var isPrepared = false
@@ -779,17 +784,25 @@ class MainActivity : AppCompatActivity() {
 
 
         private fun createCameraPreviewSession() {
-            mImageReader = ImageReader.newInstance(1920,1080, ImageFormat.JPEG,1)
+            texture = mImageView.surfaceTexture
+            //previewSize settings
+            val map = characteristics!!.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+            val format = ImageFormat.JPEG
+            val sizes = map!!.getOutputSizes(format)
+            val viewWidth: Int = mImageView.width
+            val viewHeight: Int = mImageView.height
+            val aspectRatio: Float = sizes[1].width / sizes[1].height.toFloat()
+            mImageView.setLayoutParams(FrameLayout.LayoutParams(viewWidth*aspectRatio.toInt(), viewHeight*aspectRatio.toInt()))
+            texture?.setDefaultBufferSize(sizes[1].height,sizes[1].width)
+            mImageReader = ImageReader.newInstance(sizes[1].height,sizes[1].width, ImageFormat.JPEG,1)
             mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener, null)
-                    texture = mImageView.surfaceTexture
-                    // texture.setDefaultBufferSize(1920,1080);
-                    val surface = Surface(texture)
-                    try {
-                        val builder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-                        builder.addTarget(surface)
-                        //recorderSurface?.let { builder.addTarget(it) }
-                        //zoom
-                        findViewById<SeekBar>(R.id.seekBar3).setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+            val surface = Surface(texture)
+            try {
+                val builder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+                builder.addTarget(surface)
+                //recorderSurface?.let { builder.addTarget(it) }
+                //zoom
+                findViewById<SeekBar>(R.id.seekBar3).setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
                             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                                 val sensorRect =
                                     characteristics!!.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
@@ -932,7 +945,8 @@ class MainActivity : AppCompatActivity() {
                             ActivityCompat.requestPermissions(this@MainActivity,
                                 arrayOf( Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
                         }
-                        mBackgroundHandler?.post(ImageSaver(reader.acquireNextImage(), mFile, BitmapFactory.decodeResource(resources ,currentMask), ctx))
+                        val backBitmap = if(currentMask==R.drawable.transparent_retro_borders) {null} else{BitmapFactory.decodeResource(resources ,currentMask)}
+                        mBackgroundHandler?.post(ImageSaver(reader.acquireNextImage(), mFile, backBitmap, flipEnabled, ctx, userViewModel))
                     }
                 }
             }
@@ -987,9 +1001,11 @@ class MainActivity : AppCompatActivity() {
             }
     }
 }
-private class ImageSaver internal constructor(image: Image, file: File, mask: Bitmap, ctx: Context) : Runnable {
+private class ImageSaver internal constructor(image: Image, file: File, mask: Bitmap?, isFlipped: Boolean, ctx: Context, viewModel: MainViewModel) : Runnable {
     private var mFile: File = file
     private val mask = mask
+    private val viewModel = viewModel
+    private val isFlipped = !isFlipped
     private val mImage: Image = image
     private val ctx: Context = ctx
     override fun run() {
@@ -1015,10 +1031,29 @@ private class ImageSaver internal constructor(image: Image, file: File, mask: Bi
             }
             mFile = File(ctx.getExternalFilesDir(null), "mirrorImages/$newName")
             output = FileOutputStream(mFile)
-            val img = combineImg(bytes, mask)
-            val stream = ByteArrayOutputStream()
-            img?.compress(Bitmap.CompressFormat.PNG, 90, stream)
-            val rbytes = stream.toByteArray()
+            var rbytes : ByteArray? = null
+            if(mask!=null) {
+                val img = combineImg(bytes, mask, isFlipped )
+                val stream = ByteArrayOutputStream()
+                img?.compress(Bitmap.CompressFormat.PNG, 90, stream)
+                rbytes = stream.toByteArray()
+            }else{
+                if (isFlipped){
+                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
+                    val matrix = Matrix()
+                    matrix.setScale(-1f, 1f) // Отзеркаливание по горизонтали
+
+                    matrix.postTranslate(bitmap.width.toFloat(), 0f) // Сдвиг на ширину изображения
+
+                    val flippedBitmap =
+                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                    val stream = ByteArrayOutputStream()
+                    flippedBitmap.compress(Bitmap.CompressFormat.PNG, 90, stream)
+                    rbytes = stream.toByteArray()
+                }else
+                    rbytes = bytes
+            }
             output.write(rbytes)
         } catch (e: IOException) {
             println("imgsaveErr"+e.localizedMessage)
@@ -1030,6 +1065,7 @@ private class ImageSaver internal constructor(image: Image, file: File, mask: Bi
                     val intent = Intent(ctx, mirror.hand.makeup.shaving.best.zoom.pocket.selfie.FullscreenActivity::class.java)
                     intent.putExtra("imgPath", mFile.absolutePath)
                     intent.putExtra("mode", "preview")
+                    if (mFile.exists()) viewModel.lastImagePath = mFile.absolutePath
                     ctx.startActivity(intent)
                 } catch (e: IOException) {
                     println("saveERR"+e.localizedMessage)
@@ -1038,8 +1074,17 @@ private class ImageSaver internal constructor(image: Image, file: File, mask: Bi
         }
     }
 
-    fun combineImg(back : ByteArray, front: Bitmap) : Bitmap?{
-        val myBitmap = BitmapFactory.decodeByteArray(back, 0, back.size, null)
+    fun combineImg(back : ByteArray, front: Bitmap, isFlipped: Boolean) : Bitmap?{
+        var myBitmap = BitmapFactory.decodeByteArray(back, 0, back.size, null)
+        if (isFlipped){
+            val matrix = Matrix()
+            matrix.setScale(-1f, 1f) // Отзеркаливание по горизонтали
+
+            matrix.postTranslate(myBitmap.width.toFloat(), 0f) // Сдвиг на ширину изображения
+
+            myBitmap =
+                Bitmap.createBitmap(myBitmap, 0, 0, myBitmap.getWidth(), myBitmap.getHeight(), matrix, true)
+        }
         val combinedBitmap = Bitmap.createBitmap(myBitmap.width, myBitmap.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(combinedBitmap)
         canvas.drawBitmap(myBitmap, Rect(0,0, myBitmap.width, myBitmap.height), Rect(0, 0, myBitmap.width, myBitmap.height), null)

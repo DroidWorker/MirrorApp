@@ -43,6 +43,8 @@ class SplashActivity : AppCompatActivity() {
         //loading data
         viewModel.loadVotes()
         viewModel.loadTexts()
+        if (viewModel.shareAppString=="Error")viewModel.getShareAppLink()
+        if (viewModel.myAppsString=="Error")viewModel.getMyAppsLink()
         val remoteConfig: FirebaseRemoteConfig = Firebase.remoteConfig
         val configSettings = remoteConfigSettings {
             minimumFetchIntervalInSeconds = 3600
@@ -89,14 +91,16 @@ class SplashActivity : AppCompatActivity() {
 // Создаем интент, который будет запускаться при нажатии на уведомление
             val intent = Intent(this, MainActivity::class.java)
             val pendingIntent =
-                PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
+                else PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
             val intentClose = Intent(this, NotificationReceiver::class.java).apply {
                 action = "mirror.hand.makeup.shaving.best.zoom.pocket.selfie.notification.ACTION_CLOSE"
                 putExtra("notification_id", notificationId)
             }
 
-            val pendingIntentClose = PendingIntent.getBroadcast(this, 0, intentClose, PendingIntent.FLAG_UPDATE_CURRENT)
+            val pendingIntentClose =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getActivity(this, 0, intentClose, PendingIntent.FLAG_MUTABLE)
+                else PendingIntent.getActivity(this, 0, intentClose, PendingIntent.FLAG_UPDATE_CURRENT)
 
             val remoteViews = RemoteViews(packageName, R.layout.notification)
             remoteViews.setTextViewText(R.id.notText, "Нажмите, чтобы открыть")

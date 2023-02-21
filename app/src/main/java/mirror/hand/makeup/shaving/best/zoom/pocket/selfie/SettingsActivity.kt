@@ -3,6 +3,7 @@ package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -60,14 +61,17 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
 
                     val intent = Intent(this, MainActivity::class.java)
                     val pendingIntent =
-                        PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
+                        else PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
                     val intentClose = Intent(this, NotificationReceiver::class.java).apply {
                         action = "mirror.hand.makeup.shaving.best.zoom.pocket.selfie.notification.ACTION_CLOSE"
                         putExtra("notification_id", notificationId)
                     }
 
-                    val pendingIntentClose = PendingIntent.getBroadcast(this, 0, intentClose, PendingIntent.FLAG_UPDATE_CURRENT)
+                    val pendingIntentClose =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getActivity(this, 0, intentClose, PendingIntent.FLAG_MUTABLE)
+                        else PendingIntent.getActivity(this, 0, intentClose, PendingIntent.FLAG_UPDATE_CURRENT)
 
                     val remoteViews = RemoteViews(packageName, R.layout.notification)
                     remoteViews.setTextViewText(R.id.notText, "Нажмите, чтобы открыть")
@@ -143,13 +147,6 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         val cllist2 = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.qlist2)
         val rbg = bottomSheetDialog.findViewById<RadioGroup>(R.id.radioGroup)
         val rbg2 = bottomSheetDialog.findViewById<RadioGroup>(R.id.radioGroup2)
-        val rb1 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton)
-        val rb2 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton3)
-        val rb3 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton4)
-        val rb4 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton5)
-        val rb5 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton6)
-        val rb6 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton7)
-        val rb7 = bottomSheetDialog.findViewById<RadioButton>(R.id.radioButton9)
         val buttonNext = bottomSheetDialog.findViewById<Button>(R.id.buttonNexxt)
         val buttonNex2 = bottomSheetDialog.findViewById<Button>(R.id.buttonNexxt2)
         val text = bottomSheetDialog.findViewById<EditText>(R.id.BSDReditText)
@@ -241,12 +238,12 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
             if (text?.text!!.length>2){
                 val intent = Intent(Intent.ACTION_SENDTO).apply {
                     data = Uri.parse("mailto:")
-                    putExtra(Intent.EXTRA_EMAIL, arrayOf("test@test.test"))
+                    putExtra(Intent.EXTRA_EMAIL, arrayOf("smarteasyapps17@gmail.com"))
                     putExtra(Intent.EXTRA_SUBJECT, "Обращение пользователя AppMirror")
                     putExtra(Intent.EXTRA_TEXT, "$answer, ")
                 }
                 if (intent.resolveActivity(this.packageManager) != null) {
-                    this.startActivity(intent)
+                    startActivity(Intent.createChooser(intent, "Choose an Email client :"));
                 } else {
                     Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
                 }
@@ -260,7 +257,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
     fun shareText(v: View) {
         val intent = Intent(Intent.ACTION_SEND)
         intent.type = "text/plain"
-        intent.putExtra(Intent.EXTRA_TEXT, "https/googleplaystorelink")
+        intent.putExtra(Intent.EXTRA_TEXT, viewModel.shareAppString)
         this.startActivity(Intent.createChooser(intent, "Share via"))
     }
 
@@ -311,7 +308,11 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                     return@setOnClickListener
                 }
                 else if(rate>3){
-                    TODO("go on playmarket")
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                    } catch (e: ActivityNotFoundException) {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                    }
                     return@setOnClickListener
                 }
             }
@@ -328,12 +329,12 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                 if (etText?.text?.length!! >3){
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse("mailto:")
-                        putExtra(Intent.EXTRA_EMAIL, arrayOf("test@test.test"))
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf("smarteasyapps17@gmail.com"))
                         putExtra(Intent.EXTRA_SUBJECT, "mirrorAPP")
                         putExtra(Intent.EXTRA_TEXT, etText!!.text)
                     }
                     if (intent.resolveActivity(this.packageManager) != null) {
-                        this.startActivity(intent)
+                        startActivity(Intent.createChooser(intent, "Send mail..."))
                     } else {
                         Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
                     }
@@ -344,6 +345,13 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         bottomSheetDialog.show()
     }
 
+    fun onOtherAppsClick(v: View){
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pub:SmartEasyApps")))
+        } catch (e: ActivityNotFoundException) {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(viewModel.myAppsString)))
+        }
+    }
 
     private fun selectStar(iv1: ImageView?, iv2: ImageView?,iv3: ImageView?,iv4: ImageView?,iv5: ImageView?, b: Button?, r: Int){
         if (r<=0) return
