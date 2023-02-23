@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.*
+import android.hardware.Camera
 import android.hardware.camera2.*
 import android.hardware.camera2.CameraCaptureSession.CaptureCallback
 import android.media.Image
@@ -30,7 +31,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
@@ -40,12 +40,15 @@ import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.GestureListener
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.SmoothBottomSheetDialog
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.Timer
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.VIdeoTool
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.time.LocalTime
 import java.util.*
+import kotlin.collections.RandomAccess
 
 
 class MainActivity : AppCompatActivity() {
@@ -63,6 +66,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var gestureDetector: GestureDetector
 
+    var vt : VIdeoTool? = null
+
     var myCameras: ArrayList<CameraService>? = null
     var openedCamera = 1
     var mCameraManager: CameraManager? = null
@@ -73,6 +78,8 @@ class MainActivity : AppCompatActivity() {
     var isMirrorSelected = true
 
     lateinit var mImageView: TextureView
+    lateinit var mSurfaceView: SurfaceView
+    lateinit var surfaceforVT: Surface
     lateinit var imageContainer: ConstraintLayout
     lateinit var seekbar: SeekBar
     lateinit var backgroundLayout : ConstraintLayout
@@ -206,16 +213,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        if(myCameras?.size!! >= openedCamera)myCameras?.get(openedCamera)?.closeCamera()
+        if(myCameras?.size!=null && myCameras?.size!! >= openedCamera)myCameras?.get(openedCamera)?.closeCamera()
         isCamStarted=false
         isInShot = false
         stopBackgroundThread()
     }
 
-    override fun onDestroy() {
+    /*override fun onDestroy() {
         super.onDestroy()
-        myCameras?.get(openedCamera)?.closeCamera()
-    }
+        //myCameras?.get(openedCamera)?.closeCamera()
+    }*/
 
     private fun startBackgroundThread() {
         mBackgroundThread = HandlerThread("CameraBackground")
@@ -224,7 +231,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopBackgroundThread() {
-        mBackgroundThread!!.quitSafely()
+        mBackgroundThread?.quitSafely()
         try {
             mBackgroundThread!!.join()
             mBackgroundThread = null
@@ -254,6 +261,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 mImageView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
                     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
+                        surfaceforVT = Surface(surface)
                         myCameras!![openedCamera].openCamera()
                         myCameras!![openedCamera].setFocusBySeekBar(findViewById(R.id.seekBar))
                     }
@@ -648,6 +656,7 @@ class MainActivity : AppCompatActivity() {
         private val mFile: File = File(ctx.getExternalFilesDir(null), "mirrorImages/1.png")
         val isOpen: Boolean
             get() = mCameraDevice != null
+        var videoStarted = false
 
         fun openCamera() {
             if(isOpen){
@@ -689,14 +698,39 @@ class MainActivity : AppCompatActivity() {
                 shohtButtin.setOnTouchListener { view, motionEvent ->
                     when (motionEvent.action) {
                         MotionEvent.ACTION_DOWN -> {
-                            if (isOpen && cameraMode == "video") {
-                                startRecording()
+                            if (/*isOpen && */cameraMode == "video") {
+                                //startRecording()
+                                if(myCameras?.size!=null && myCameras?.size!! >= openedCamera)myCameras?.get(openedCamera)?.closeCamera()
+                                isCamStarted=false
+                                isInShot = false
+                                stopBackgroundThread()
+                                //val cam : Camera = Camera.open()
+                                //vt?.startRecording()
+                                vt=VIdeoTool(ctx, this@MainActivity)
+                                val filename = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    LocalTime.now()
+                                } else {
+                                    Random().nextInt()
+                                }
+                                val folder = File(ctx.getExternalFilesDir( "" ).toString()+ "/videos")
+                                folder.mkdirs()
+                                val f = File(ctx.getExternalFilesDir( "" ).toString()+ "/videos/${filename}.mp4")
+                                vt?.startCam(f.absolutePath)
                                 true
                             } else false
                         }
                         MotionEvent.ACTION_UP -> {
-                            if (isOpen && cameraMode == "video") {
-                                stopRecording()
+                            if (/*isOpen &&*/cameraMode == "video") {
+                                //stopRecording()
+                                    //vt?.stopRecording()
+                                        vt?.destroy()
+                                val outPath = vt?.stopCam()
+                                vt = null
+                                val intent = Intent(this@MainActivity, VideoActivity::class.java)
+                                intent.putExtra("imgPath", outPath)
+                                intent.putExtra("mode", "preview")
+                                startActivity(intent)
+                                myCameras?.get(openedCamera)?.openCamera()
                                 true
                             } else false
                         }
@@ -760,7 +794,7 @@ class MainActivity : AppCompatActivity() {
                             val surface = Surface(texture)
 
                             // Create a new capture request with the desired focus distance
-                            val captureRequestBuilder = mCameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+                            val captureRequestBuilder = mCameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
                             captureRequestBuilder?.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
                             captureRequestBuilder?.set(CaptureRequest.LENS_FOCUS_DISTANCE, desiredFocusDistance)
                             captureRequestBuilder?.addTarget(surface)
@@ -797,9 +831,29 @@ class MainActivity : AppCompatActivity() {
             mImageReader = ImageReader.newInstance(sizes[1].height,sizes[1].width, ImageFormat.JPEG,1)
             mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener, null)
             val surface = Surface(texture)
+            //vt = VIdeoTool(null, null, ctx, this@MainActivity, sizes[1])
+            //vt!!.prestartRecording()
             try {
+                /*val mediaRecorder = MediaRecorder().apply {
+                    setVideoSource(MediaRecorder.VideoSource.SURFACE)
+                    texture = texture
+                    setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                    setVideoEncodingBitRate(10000000)
+                    setVideoFrameRate(30)
+                    setVideoSize(sizes[1].width, sizes[1].height)
+                    setVideoEncoder(MediaRecorder.VideoEncoder.H264)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        setOutputFile(videoFile!!)
+                    }else setOutputFile(videoFile?.absolutePath)
+                }
+                try {
+                    mediaRecorder!!.prepare()
+                }catch (e: java.lang.Exception){
+                    println("prepareException: "+e.localizedMessage)
+                }*/
+                //recorderSurface = mediaRecorder!!.surface
                 val builder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-                builder.addTarget(surface)
+                //builder.addTarget(surface)
                 //recorderSurface?.let { builder.addTarget(it) }
                 //zoom
                 findViewById<SeekBar>(R.id.seekBar3).setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
@@ -856,12 +910,20 @@ class MainActivity : AppCompatActivity() {
                             override fun onStopTrackingTouch(seekBar: SeekBar?) {     }
                         })
                         //zoom
-                        mCameraDevice!!.createCaptureSession(Arrays.asList(surface, mImageReader!!.surface/*, recorderSurface!!*/),
+                val surfaces = ArrayList<Surface>()
+                surfaces.add(surface)
+                builder.addTarget(surface)
+                /*if (vt!=null&&vt?.mrec!=null) {
+                    val recorderSurface = vt?.mrec!!.surface
+                    surfaces.add(recorderSurface)
+                    builder.addTarget(recorderSurface)
+                }*/
+                            mCameraDevice!!.createCaptureSession(surfaces,
                             object : CameraCaptureSession.StateCallback() {
                                 override fun onConfigured(session: CameraCaptureSession) {
                                     mCaptureSession = session
                                     try {
-                                        //mCaptureSession!!.setRepeatingRequest(builder.build(), null, null)
+                                        mCaptureSession!!.setRepeatingRequest(builder.build(), null, null)
                                         updatePreview(builder)
                                     } catch (e: CameraAccessException) {
                                         e.printStackTrace()
@@ -967,24 +1029,6 @@ class MainActivity : AppCompatActivity() {
                     }
                     if (videoFile?.exists() == true) {
                         println("fdfddgdgdg"+videoFile?.absolutePath)
-                        val mediaRecorder = MediaRecorder().apply {
-                            setVideoSource(MediaRecorder.VideoSource.SURFACE)
-                            texture = texture
-                            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                            setVideoEncodingBitRate(10000000)
-                            setVideoFrameRate(30)
-                            setVideoSize(videoSize.width, videoSize.height)
-                            setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                setOutputFile(videoFile!!)
-                            }else setOutputFile(videoFile?.absolutePath)
-                        }
-                        try {
-                            mediaRecorder!!.prepare()
-                        }catch (e: java.lang.Exception){
-                            println("prepareException: "+e.localizedMessage)
-                        }
-                        recorderSurface = mediaRecorder!!.surface
                     }
                     createCameraPreviewSession()
                 }

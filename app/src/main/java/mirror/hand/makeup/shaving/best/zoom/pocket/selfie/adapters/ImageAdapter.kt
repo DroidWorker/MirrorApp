@@ -3,21 +3,31 @@ package mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters
 import android.content.Context
 import android.graphics.Bitmap
 import android.view.LayoutInflater
+import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ImageView
+import android.widget.TextView
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R
 
 
-class ImageAdapter(private val context: Context, val images: Map<String, Bitmap>) : BaseAdapter() {
+class ImageAdapter(private val context: Context, val images: Map<String, Bitmap>, val videos: Map<String, Bitmap>?) : BaseAdapter() {
     var separatedImages : MutableList<Bitmap> = images.values.toMutableList()
+
+    init {
+        videos?.values?.let { separatedImages.addAll(it.toMutableList()) }
+    }
 
     override fun getCount(): Int = separatedImages.size
 
     override fun getItem(position: Int): Any = separatedImages[position]
 
     fun getItemPath(position: Int) : String?{
+        videos?.forEach{
+            if (it.value == separatedImages[position])
+                return it.key
+        }
         images.forEach{
             if (it.value == separatedImages[position])
                 return it.key
@@ -37,6 +47,9 @@ class ImageAdapter(private val context: Context, val images: Map<String, Bitmap>
             null,
             false
         )
+        if (getItemPath(position)?.contains("videos")==true){
+            view.findViewById<TextView>(R.id.textView360d).visibility= View.VISIBLE
+        }
         val iv = view.findViewById<ImageView>(R.id.imagepart)
         iv.setImageBitmap(separatedImages[position])
         iv.scaleType = ImageView.ScaleType.FIT_XY

@@ -5,15 +5,19 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.CancellationSignal
 import android.provider.MediaStore
+import android.provider.MediaStore.Video.Thumbnails.MINI_KIND
+import android.util.Size
 import android.view.View
 import android.widget.*
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
@@ -22,12 +26,14 @@ import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.dialog.MyDialogFragmen
 import java.io.File
 import java.time.Instant
 
+
 class GalleryActivity : AppCompatActivity() {
     private val userViewModel by viewModels<MainViewModel>()
 
     private var isActionMode = false
     private var selectedItems = mutableListOf<Int>()
     lateinit var imgs : Map<String, Bitmap>
+    lateinit var vids : Map<String, Bitmap>
 
     lateinit var adapter : ImageAdapter
 
@@ -37,7 +43,8 @@ class GalleryActivity : AppCompatActivity() {
 
         val gridView = findViewById<GridView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.grid_view)
         imgs = getImagesFromFolder("img")
-        adapter = ImageAdapter(this, imgs)
+        vids = getVideoFromFolder()
+        adapter = ImageAdapter(this, imgs, vids)
         gridView.adapter = adapter
 
 
@@ -171,6 +178,27 @@ class GalleryActivity : AppCompatActivity() {
         if (folder.exists()) {
             for (file in folder.listFiles()) {
                 images[file.absolutePath] = BitmapFactory.decodeFile(file.absolutePath)
+            }
+        }
+        return images
+    }
+    fun  getVideoFromFolder(): Map<String, Bitmap>{
+        val folder = File(applicationContext.getExternalFilesDir(null), "videos")
+        val images = mutableMapOf<String, Bitmap>()
+        if (folder.exists()) {
+            for (file in folder.listFiles()) {
+                val thumbnail = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    ThumbnailUtils.createVideoThumbnail(
+                        file,
+                        Size(80, 150),
+                        CancellationSignal()
+                    )
+                } else {
+                    ThumbnailUtils.createVideoThumbnail(
+                        file.absolutePath,
+                        MINI_KIND
+                    )
+                }
             }
         }
         return images

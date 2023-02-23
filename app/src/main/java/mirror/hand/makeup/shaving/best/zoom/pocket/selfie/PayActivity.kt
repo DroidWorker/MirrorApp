@@ -25,6 +25,8 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
 
     var showVote = false
 
+    var tarif = "week"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pay)
@@ -64,11 +66,12 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
             Pair("5", BitmapFactory.decodeResource(resources, R.drawable.image5)),
             Pair("6", BitmapFactory.decodeResource(resources, R.drawable.image6))
         )
-        val adapter = ImageAdapter(this, imgs)
+        val adapter = ImageAdapter(this, imgs, null)
         maskView.isExpanded = true
         maskView.adapter = adapter
 
         p1.setOnClickListener{
+            tarif = "week"
             payDescription.text = txtp1
             p2.background = ContextCompat.getDrawable(this@PayActivity, R.drawable.rounded_corners_off)
             p1.background = ContextCompat.getDrawable(this@PayActivity, R.drawable.rounded_corners)
@@ -76,6 +79,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
             rb2.isChecked = false
         }
         p2.setOnClickListener{
+            tarif = "month"
             payDescription.text = txtp2
             p1.background = ContextCompat.getDrawable(this@PayActivity, R.drawable.rounded_corners_off)
             p2.background = ContextCompat.getDrawable(this@PayActivity, R.drawable.rounded_corners)
@@ -156,6 +160,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
         println("stttteeeep2")
         val skuList: MutableList<String> = ArrayList()
         skuList.add("mons67r")
+        skuList.add("year201r")
         val params = SkuDetailsParams.newBuilder()
         params.setSkusList(skuList).setType(BillingClient.SkuType.SUBS)
         val billingResult = billingClient!!.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
@@ -204,7 +209,9 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
     fun handlePurchases(purchases: List<Purchase>) {
         for (purchase in purchases) {
             //if item is purchased
-            if (purchase.skus.contains("mons67r") && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+                val sky = if(tarif == "week") "mons67r"
+                            else "year201r"
+            if (purchase.skus.contains("sky") && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
 
                 // else purchase is valid
                 //if item is purchased and not acknowledged
@@ -222,10 +229,10 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
                         recreate()
                     }
                 }
-            } else if (purchase.skus.contains("mons67r") && purchase.purchaseState == Purchase.PurchaseState.PENDING) {
+            } else if (purchase.skus.contains("sky") && purchase.purchaseState == Purchase.PurchaseState.PENDING) {
                 Toast.makeText(applicationContext,
                     "Purchase is Pending. Please complete Transaction", Toast.LENGTH_SHORT).show()
-            } else if (purchase.skus.contains("mons67r") && purchase.purchaseState == Purchase.PurchaseState.UNSPECIFIED_STATE) {
+            } else if (purchase.skus.contains("sky") && purchase.purchaseState == Purchase.PurchaseState.UNSPECIFIED_STATE) {
                 viewModel.subscriptionType = "week"
                 viewModel.isADActive = false
                 Toast.makeText(applicationContext, "Purchase Status Unknown", Toast.LENGTH_SHORT).show()

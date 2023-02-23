@@ -458,13 +458,13 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         //check if service is already connected
         println("steeeeeeeeeep1")
         if (billingClient!!.isReady) {
-            initiatePurchase()
+            initiatePurchase(true)
         } else {
             billingClient = BillingClient.newBuilder(this).enablePendingPurchases().setListener(this).build()
             billingClient!!.startConnection(object : BillingClientStateListener {
                 override fun onBillingSetupFinished(billingResult: BillingResult) {
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        initiatePurchase()
+                        initiatePurchase(false)
                     } else {
                         Toast.makeText(applicationContext, "Error " + billingResult.debugMessage, Toast.LENGTH_SHORT).show()
                     }
@@ -477,13 +477,23 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         }
     }
 
-    private fun initiatePurchase() {
+    private fun initiatePurchase(isSubscr: Boolean) {
         println("stttteeeep2")
         val skuList: MutableList<String> = ArrayList()
-        skuList.add("android.test.purchased")
+        if(isSubscr) {
+            skuList.add("mons67r")
+            skuList.add("year201r")
+        }else{
+            skuList.add("deliciousdinner")
+            skuList.add("burger")
+            skuList.add("pizza")
+            skuList.add("cupofcoffee")
+            skuList.add("icecream")
+        }
         val params = SkuDetailsParams.newBuilder()
         params.setSkusList(skuList).setType(BillingClient.SkuType.SUBS)
-        val billingResult = billingClient!!.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
+        val billingResult = if (isSubscr)billingClient!!.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
+                            else billingClient!!.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
             billingClient!!.querySkuDetailsAsync(params.build()
             ) { billingResult, skuDetailsList ->

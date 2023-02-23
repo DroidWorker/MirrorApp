@@ -17,12 +17,15 @@ class VideoActivity : AppCompatActivity() {
         setContentView(R.layout.activity_video)
 
         val mode  = intent.getStringExtra("mode") ?: "default"
-        val path = intent.getStringExtra("imgPath") ?: ""
+        var path = intent.getStringExtra("imgPath") ?: ""
         if (path==""){
             Toast.makeText(this, "Ошибка видео", Toast.LENGTH_LONG).show()
             finish()
         }
         val videoUri: Uri = Uri.fromFile(File(getExternalFilesDir(null), "videos/video.mp4"))//Uri.parse("path/to/video.mp4")
+        if(!(File(getExternalFilesDir(null), "videos/video.mp4").exists())){
+            File(getExternalFilesDir(null), "videos/video.mp4").createNewFile()
+        }
 
         videoView = findViewById(R.id.videoView)
         timeline = findViewById(R.id.timelineView)
