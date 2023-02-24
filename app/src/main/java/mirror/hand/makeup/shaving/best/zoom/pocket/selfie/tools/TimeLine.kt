@@ -151,7 +151,7 @@ class TimelineView : View {
         selectedBoxPaint = Paint()
         selectedBoxPaint.strokeWidth = pxFromDp(2f)
         selectedBoxPaint.style = Paint.Style.STROKE
-        selectedBoxPaint.color = Color.RED
+        selectedBoxPaint.color = Color.BLACK
 
         arrowPaint = Paint()
         arrowPaint.strokeWidth = pxFromDp(2f)

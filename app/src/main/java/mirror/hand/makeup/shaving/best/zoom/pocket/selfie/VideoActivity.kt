@@ -1,8 +1,10 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageButton
 import android.widget.Toast
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
@@ -12,6 +14,9 @@ import java.io.File
 class VideoActivity : AppCompatActivity() {
     lateinit var timeline : TimelineView
     lateinit var videoView : VideoView
+
+    var isPlay = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video)
@@ -22,10 +27,8 @@ class VideoActivity : AppCompatActivity() {
             Toast.makeText(this, "Ошибка видео", Toast.LENGTH_LONG).show()
             finish()
         }
-        val videoUri: Uri = Uri.fromFile(File(getExternalFilesDir(null), "videos/video.mp4"))//Uri.parse("path/to/video.mp4")
-        if(!(File(getExternalFilesDir(null), "videos/video.mp4").exists())){
-            File(getExternalFilesDir(null), "videos/video.mp4").createNewFile()
-        }
+        val videoUri: Uri = Uri.fromFile(File(path))//Uri.parse("path/to/video.mp4")
+
 
         videoView = findViewById(R.id.videoView)
         timeline = findViewById(R.id.timelineView)
@@ -37,6 +40,13 @@ class VideoActivity : AppCompatActivity() {
 
         timeline.setTotalDuration(videoView.duration.toLong())
         videoView.start()
+
+
+        videoView.setOnCompletionListener(object : MediaPlayer.OnCompletionListener {
+            override fun onCompletion(mp: MediaPlayer?) {
+                videoView.seekTo(0)
+            }
+        })
 
         timeline.callback = object : TimelineView.Callback{
             override fun onSeek(position: Float, seekMillis: Long) {
@@ -54,6 +64,18 @@ class VideoActivity : AppCompatActivity() {
 
             override fun onRightProgress(rightPos: Float, seekMillis: Long) {
             }
+        }
+    }
+
+    fun onPausePlayClick(v: View){
+        if (isPlay) {
+            videoView.pause()
+            (v as ImageButton).setImageResource(R.drawable.play)
+            isPlay = false
+        }else{
+            videoView.start()
+            (v as ImageButton).setImageResource(R.drawable.pause)
+            isPlay = true
         }
     }
 

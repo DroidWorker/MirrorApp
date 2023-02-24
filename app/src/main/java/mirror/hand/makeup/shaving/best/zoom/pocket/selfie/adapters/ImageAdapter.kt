@@ -47,7 +47,7 @@ class ImageAdapter(private val context: Context, val images: Map<String, Bitmap>
             null,
             false
         )
-        if (getItemPath(position)?.contains("videos")==true){
+        if (getItemPath(position)?.contains("mirrorImages")==false){
             view.findViewById<TextView>(R.id.textView360d).visibility= View.VISIBLE
         }
         val iv = view.findViewById<ImageView>(R.id.imagepart)

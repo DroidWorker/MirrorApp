@@ -18,11 +18,17 @@
 
     <mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.TimelineView
         android:id="@+id/timelineView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="50dp"
+        android:layout_marginStart="8dp"
+        android:outlineAmbientShadowColor="@color/black"
+        android:outlineSpotShadowColor="@color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toEndOf="@+id/imageButton6"
+        app:left_thumb_color="@color/black"
+        app:progress_thumb_color="@color/white"
+        app:right_thumb_color="@color/black" />
 
     <ImageButton
         android:id="@+id/imageView4"
@@ -70,4 +76,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/download_black" />
+
+    <ImageButton
+        android:id="@+id/imageButton6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:layout_marginTop="6dp"
+        android:background="@android:color/transparent"
+        android:onClick="onPausePlayClick"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/videoView"
+        app:srcCompat="@drawable/pause" />
 </androidx.constraintlayout.widget.ConstraintLayout>

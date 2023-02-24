@@ -1,10 +1,12 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
+import android.content.ContentProvider
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.media.MediaMetadataRetriever
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Build
@@ -12,6 +14,7 @@ import android.os.Bundle
 import android.os.CancellationSignal
 import android.provider.MediaStore
 import android.provider.MediaStore.Video.Thumbnails.MINI_KIND
+import android.util.Log
 import android.util.Size
 import android.view.View
 import android.widget.*
@@ -24,6 +27,8 @@ import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.ImageAdapter
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.dialog.MyDialogFragment
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.time.Instant
 
 
@@ -53,9 +58,18 @@ class GalleryActivity : AppCompatActivity() {
                 selectItem(position, view)
             } else {
                 userViewModel.currentImage.tryEmit(adapter.separatedImages[position])
-                val intent = Intent(this@GalleryActivity, mirror.hand.makeup.shaving.best.zoom.pocket.selfie.FullscreenActivity::class.java)
-                intent.putExtra("imgPath", adapter.getItemPath(position))
-                startActivity(intent)
+                var vintent : Intent?
+                adapter.getItemPath(position).let {
+                    if (it?.contains("mirrorImages") == true) {
+                        vintent = Intent(this@GalleryActivity, FullscreenActivity::class.java)
+                        vintent!!.putExtra("imgPath", it)
+                    }
+                    else {
+                        vintent = Intent(this@GalleryActivity, VideoActivity::class.java)
+                        vintent!!.putExtra("imgPath", File(this.getExternalFilesDir( "" ).toString()+ "/videos/${it}.mp4").absolutePath)
+                    }
+                }
+                startActivity(vintent)
             }
         }
 
@@ -105,7 +119,7 @@ class GalleryActivity : AppCompatActivity() {
 
         val intent = Intent().apply {
             action = Intent.ACTION_SEND_MULTIPLE
-            type = "image/*"
+            type = "image/* video/*"
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, sendArr)
         }
         startActivity(Intent.createChooser(intent, "Share images"))
@@ -177,6 +191,7 @@ class GalleryActivity : AppCompatActivity() {
         val images = mutableMapOf<String, Bitmap>()
         if (folder.exists()) {
             for (file in folder.listFiles()) {
+                println("knknknknk"+file.absolutePath)
                 images[file.absolutePath] = BitmapFactory.decodeFile(file.absolutePath)
             }
         }
@@ -184,24 +199,52 @@ class GalleryActivity : AppCompatActivity() {
     }
     fun  getVideoFromFolder(): Map<String, Bitmap>{
         val folder = File(applicationContext.getExternalFilesDir(null), "videos")
-        val images = mutableMapOf<String, Bitmap>()
+        val vids = mutableMapOf<String, Bitmap>()
+        val folderth = File(this.getExternalFilesDir( "" ).toString()+ "/videos/thumb")
+        folderth.mkdirs()
         if (folder.exists()) {
             for (file in folder.listFiles()) {
-                val thumbnail = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    ThumbnailUtils.createVideoThumbnail(
-                        file,
-                        Size(80, 150),
-                        CancellationSignal()
-                    )
-                } else {
-                    ThumbnailUtils.createVideoThumbnail(
-                        file.absolutePath,
-                        MINI_KIND
-                    )
+                if (file.isFile) {
+                    val filename = file.name.replace(".mp4", "")
+                    println("koko")
+                    //create preview
+                    if (!File(
+                            this.getExternalFilesDir("")
+                                .toString() + "/videos/thumb/${filename}.png"
+                        ).exists()){
+                            val mediaMetadataRetriever = MediaMetadataRetriever()
+                            mediaMetadataRetriever.setDataSource(file.absolutePath)
+                            //save preview
+                            val f = File(
+                                this.getExternalFilesDir("")
+                                    .toString() + "/videos/thumb/${filename}.png"
+                            )
+                            val bitmap = mediaMetadataRetriever.getFrameAtTime(0)
+                            try {
+                                val fileOutputStream = FileOutputStream(f)
+                                bitmap?.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
+                                fileOutputStream.flush()
+                                fileOutputStream.close()
+                            } catch (e: IOException) {
+                                e.printStackTrace()
+                            }
+
+                            mediaMetadataRetriever.release()
+                }
+                    try {
+                        val f = File(
+                            this.getExternalFilesDir("")
+                                .toString() + "/videos/thumb/${filename}.png"
+                        )
+                        vids[f.name.replace(".png", "")] =
+                            BitmapFactory.decodeFile(f.absolutePath)
+                    } catch (ex: Exception) {
+                        Log.e("parceThumbError", ex.stackTraceToString())
+                    }
                 }
             }
         }
-        return images
+        return vids
     }
 
     fun deleteFileByAbsolutePath(filePath: String) {
