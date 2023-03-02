@@ -39,6 +39,7 @@
     <string name="subprice2">7 days free</string>
     <string name="econ">Save 67%</string>
     <string name="pay_description">3 days free, then </string>
+    <string name="pay_description_year">7 days free, then </string>
     <string name="pay_terms">Terms of use</string>
     <string name="pay_policy">Privacy policy</string>
     <string name="title_360">360° mode</string>

@@ -1,19 +1,27 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
+import android.content.Intent
+import android.graphics.Bitmap
 import android.media.MediaPlayer
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.View
 import android.widget.ImageButton
 import android.widget.Toast
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.TimelineView
-import java.io.File
+import java.io.*
 
 class VideoActivity : AppCompatActivity() {
     lateinit var timeline : TimelineView
     lateinit var videoView : VideoView
+
+    var saveImg = false
+    lateinit var mode: String
+    lateinit var path: String
 
     var isPlay = true
 
@@ -21,8 +29,8 @@ class VideoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video)
 
-        val mode  = intent.getStringExtra("mode") ?: "default"
-        var path = intent.getStringExtra("imgPath") ?: ""
+        mode  = intent.getStringExtra("mode") ?: "default"
+        path = intent.getStringExtra("imgPath") ?: ""
         if (path==""){
             Toast.makeText(this, "Ошибка видео", Toast.LENGTH_LONG).show()
             finish()
@@ -67,6 +75,13 @@ class VideoActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        if (!saveImg && mode=="preview"){//preview mode remove image
+            if(path!=null) deleteFileByAbsolutePath(path!!)
+        }
+    }
+
     fun onPausePlayClick(v: View){
         if (isPlay) {
             videoView.pause()
@@ -79,7 +94,56 @@ class VideoActivity : AppCompatActivity() {
         }
     }
 
+    fun onSaveClick(v: View){
+        if (mode == "preview") {
+            saveImg = true
+            Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
+            finish()
+        }
+        else{
+            val file = File(path)
+
+            try {
+                val src = FileInputStream(File(filesDir, "video.mp4"))
+                val dst = FileOutputStream(file)
+                src.copyTo(dst)
+                src.close()
+                dst.close()
+
+                // обновите галерею, чтобы добавить сохраненное видео
+                MediaScannerConnection.scanFile(
+                    applicationContext,
+                    arrayOf(file.toString()),
+                    arrayOf("video/*"),
+                    null
+                )
+                Toast.makeText(this, "Сохранено в галерею", Toast.LENGTH_SHORT).show()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun onShareClick(v: View){
+        try {
+            val shareIntent = Intent(Intent.ACTION_SEND)
+            shareIntent.type = "video/*"
+            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(File(path)))
+            startActivity(Intent.createChooser(shareIntent, "Поделиться видео"))
+        }
+        catch (ex: Exception){
+            println("sharevidoe"+ex.stackTraceToString())
+        }
+    }
+
     fun onBackClick(v: View){
         finish()
+    }
+
+    private fun deleteFileByAbsolutePath(filePath: String) {
+        val file = File(filePath)
+        if (file.exists()) {
+            file.delete()
+        }
     }
 }

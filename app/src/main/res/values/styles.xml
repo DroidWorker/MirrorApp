@@ -7,6 +7,18 @@
     <style name="MyRadioButtonStyle" parent="@android:style/Widget.CompoundButton.RadioButton">
         <item name="android:button">@drawable/rb_checker</item>
     </style>
+    <style name="BottomSheetDialogKeyboardTheme" parent="Theme.MaterialComponents.DayNight.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeBottomSheetDialogKeyboard</item>
+    </style>
+    <style name="ShapeBottomSheetDialogKeyboard" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">16dp</item>
+        <item name="cornerSizeTopLeft">16dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
     <declare-styleable name="TimelineView">
         <attr name="left_thumb_color" format="color"/>
         <attr name="progress_thumb_color" format="color"/>

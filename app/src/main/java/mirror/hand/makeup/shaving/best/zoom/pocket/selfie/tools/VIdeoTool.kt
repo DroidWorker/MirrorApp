@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.hardware.Camera
 import android.opengl.GLSurfaceView
+import android.os.CountDownTimer
 import android.util.Size
 import android.view.*
 import android.widget.FrameLayout
@@ -51,6 +52,7 @@ class VIdeoTool(context: Context, act : Activity) {
     fun startCam(path: String){
         recOutputPath = path
         cameraRecorder?.start(path)
+        startCounter { stopCam() }
     }
 
     fun stopCam():String?{
@@ -58,4 +60,15 @@ class VIdeoTool(context: Context, act : Activity) {
         return recOutputPath
     }
 
+    fun startCounter(callback: () -> Unit) {
+        object : CountDownTimer(8000, 1000) {
+            override fun onFinish() {
+                callback()
+            }
+
+            override fun onTick(millisUntilFinished: Long) {
+                // здесь можно обновлять UI каждую секунду (оставим пустым)
+            }
+        }.start()
+    }
 }

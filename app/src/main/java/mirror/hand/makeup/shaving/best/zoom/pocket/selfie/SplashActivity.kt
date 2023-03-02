@@ -99,13 +99,13 @@ class SplashActivity : AppCompatActivity() {
             }
 
             val pendingIntentClose =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getActivity(this, 0, intentClose, PendingIntent.FLAG_MUTABLE)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getBroadcast(this, 0, intentClose, PendingIntent.FLAG_MUTABLE)
                 else PendingIntent.getActivity(this, 0, intentClose, PendingIntent.FLAG_UPDATE_CURRENT)
 
             val remoteViews = RemoteViews(packageName, R.layout.notification)
             remoteViews.setTextViewText(R.id.notText, "Нажмите, чтобы открыть")
             remoteViews.setOnClickPendingIntent(R.id.root, pendingIntent)
-            remoteViews.setOnClickPendingIntent(R.id.imageButton2, pendingIntentClose)
+            remoteViews.setOnClickPendingIntent(R.id.imageButton222, pendingIntentClose)
 // Создаем уведомление
             val builder = NotificationCompat.Builder(this, "appMirrorChannel")
                 .setSmallIcon(R.drawable.app_icon)

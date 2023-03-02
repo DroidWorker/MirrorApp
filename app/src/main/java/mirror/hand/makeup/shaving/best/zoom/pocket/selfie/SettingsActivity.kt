@@ -18,13 +18,17 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.DialogFragment
 import com.android.billingclient.api.*
+import com.google.android.gms.common.ErrorDialogFragment.newInstance
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.NotificationReceiver
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.SmoothBottomSheetDialog
 
 
 class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
+    var sky = "burger"
     var rate = -1
     private val viewModel by viewModels<MainViewModel>()
     lateinit var billingClient : BillingClient
@@ -70,13 +74,13 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                     }
 
                     val pendingIntentClose =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getActivity(this, 0, intentClose, PendingIntent.FLAG_MUTABLE)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getBroadcast(this, 0, intentClose, PendingIntent.FLAG_IMMUTABLE)
                         else PendingIntent.getActivity(this, 0, intentClose, PendingIntent.FLAG_UPDATE_CURRENT)
 
                     val remoteViews = RemoteViews(packageName, R.layout.notification)
                     remoteViews.setTextViewText(R.id.notText, "Нажмите, чтобы открыть")
                     remoteViews.setOnClickPendingIntent(R.id.root, pendingIntent)
-                    remoteViews.setOnClickPendingIntent(R.id.imageButton2, pendingIntentClose)
+                    remoteViews.setOnClickPendingIntent(R.id.imageButton222, pendingIntentClose)
 
                     val builder = NotificationCompat.Builder(this, "appMirrorChannel")
                         .setSmallIcon(R.drawable.app_icon)
@@ -122,11 +126,11 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         val pizza = bottomSheetDialog.findViewById<TextView>(R.id.bsdPizza)
         val dinner = bottomSheetDialog.findViewById<TextView>(R.id.bsdDinner)
 
-        icecream?.setOnClickListener{subscribe()}
-        coffee?.setOnClickListener{subscribe()}
-        burger?.setOnClickListener{subscribe()}
-        pizza?.setOnClickListener{subscribe()}
-        dinner?.setOnClickListener{subscribe()}
+        icecream?.setOnClickListener{subscribe(0)}
+        coffee?.setOnClickListener{subscribe(1)}
+        burger?.setOnClickListener{subscribe(2)}
+        pizza?.setOnClickListener{subscribe(3)}
+        dinner?.setOnClickListener{subscribe(4)}
 
         bottomSheetDialog.show()
     }
@@ -433,7 +437,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     billingClient.queryPurchaseHistoryAsync(
-                        BillingClient.SkuType.SUBS,
+                        BillingClient.SkuType.INAPP,
                         PurchaseHistoryResponseListener { billingResult, list ->
                             Log.e("TAG", "checkCached result: $list")
                             if (list == null||list.size==0) {
@@ -454,17 +458,17 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         })
     }
 
-    fun subscribe() {
+    fun subscribe(skyId: Int) {
         //check if service is already connected
         println("steeeeeeeeeep1")
         if (billingClient!!.isReady) {
-            initiatePurchase(true)
+            initiatePurchase(true, skyId)
         } else {
             billingClient = BillingClient.newBuilder(this).enablePendingPurchases().setListener(this).build()
             billingClient!!.startConnection(object : BillingClientStateListener {
                 override fun onBillingSetupFinished(billingResult: BillingResult) {
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        initiatePurchase(false)
+                        initiatePurchase(false, skyId)
                     } else {
                         Toast.makeText(applicationContext, "Error " + billingResult.debugMessage, Toast.LENGTH_SHORT).show()
                     }
@@ -477,21 +481,27 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         }
     }
 
-    private fun initiatePurchase(isSubscr: Boolean) {
+    private fun initiatePurchase(isSubscr: Boolean, skyId: Int) {
         println("stttteeeep2")
         val skuList: MutableList<String> = ArrayList()
-        if(isSubscr) {
-            skuList.add("mons67r")
-            skuList.add("year201r")
-        }else{
-            skuList.add("deliciousdinner")
-            skuList.add("burger")
-            skuList.add("pizza")
-            skuList.add("cupofcoffee")
-            skuList.add("icecream")
-        }
+        /*skuList.add("deliciousdinner")
+        skuList.add("burger")
+        skuList.add("pizza")
+        skuList.add("cupofcoffee")
+        skuList.add("icecream")*/
+        skuList.add(
+            when(skyId){
+                0->"icecream"
+                1->"cupofcoffee"
+                2->"burger"
+                3->"pizza"
+                4->"deliciousdinner"
+                else->"icecream"
+            }
+        )
+        sky = skuList[0]
         val params = SkuDetailsParams.newBuilder()
-        params.setSkusList(skuList).setType(BillingClient.SkuType.SUBS)
+        params.setSkusList(skuList).setType(BillingClient.SkuType.INAPP)
         val billingResult = if (isSubscr)billingClient!!.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
                             else billingClient!!.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
@@ -525,7 +535,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
             handlePurchases(purchases)
         }
         else if (billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
-            val queryAlreadyPurchasesResult = billingClient!!.queryPurchases(BillingClient.SkuType.SUBS)
+            val queryAlreadyPurchasesResult = billingClient!!.queryPurchases(BillingClient.SkuType.INAPP)
             val alreadyPurchases = queryAlreadyPurchasesResult.purchasesList
             alreadyPurchases?.let { handlePurchases(it) }
         }
@@ -539,7 +549,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
     fun handlePurchases(purchases: List<Purchase>) {
         for (purchase in purchases) {
             //if item is purchased
-            if (purchase.skus.contains("android.test.purchased") && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+            if (purchase.skus.contains(sky) && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
 
                 // else purchase is valid
                 //if item is purchased and not acknowledged
@@ -551,16 +561,16 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                 } else {
                     // Grant entitlement to the user on item purchase
                     // restart activity
-                    if (viewModel.subscriptionType=="off") {
-                        viewModel.subscriptionType = "week"
+                    //if (viewModel.subscriptionType=="off") {
+                        //viewModel.subscriptionType = "week"
                         Toast.makeText(applicationContext, "Item Purchased", Toast.LENGTH_SHORT).show()
                         recreate()
-                    }
+                    //}
                 }
-            } else if (purchase.skus.contains("android.test.purchased") && purchase.purchaseState == Purchase.PurchaseState.PENDING) {
+            } else if (purchase.skus.contains(sky) && purchase.purchaseState == Purchase.PurchaseState.PENDING) {
                 Toast.makeText(applicationContext,
                     "Purchase is Pending. Please complete Transaction", Toast.LENGTH_SHORT).show()
-            } else if (purchase.skus.contains("android.test.purchased") && purchase.purchaseState == Purchase.PurchaseState.UNSPECIFIED_STATE) {
+            } else if (purchase.skus.contains(sky) && purchase.purchaseState == Purchase.PurchaseState.UNSPECIFIED_STATE) {
                 viewModel.subscriptionType = "week"
                 viewModel.isADActive = false
                 Toast.makeText(applicationContext, "Purchase Status Unknown", Toast.LENGTH_SHORT).show()
@@ -572,7 +582,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
             //if purchase is acknowledged
             // Grant entitlement to the user. and restart activity
-            viewModel.subscriptionType = "week"
+            //viewModel.subscriptionType = "week"
             recreate()
         }
     }

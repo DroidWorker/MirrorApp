@@ -40,6 +40,7 @@
     <string name="subprice2">7 дней бесплатно</string>
     <string name="econ">Экономия 67%</string>
     <string name="pay_description">3 дня бесплатно, затем </string>
+    <string name="pay_description_year">7 дней бесплатно, затем </string>
     <string name="pay_terms">Пользовательское соглашение</string>
     <string name="pay_policy">Политика конфеденциальности</string>
     <string name="title_360">Режим 360°</string>

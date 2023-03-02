@@ -101,11 +101,15 @@ class GalleryActivity : AppCompatActivity() {
         val dialogFragment = MyDialogFragment()
         dialogFragment.setOnPositiveButtonClickListener { ->
             selectedItems.forEach{
-                adapter.getItemPath(it)?.let { it1 -> deleteFileByAbsolutePath(it1) }
+                adapter.getItemPath(it)?.let { it1 ->
+                    if (it1.contains("mirrorImages"))   deleteFileByAbsolutePath(it1)
+                    else deleteFileByAbsolutePath(File(this.getExternalFilesDir( "" ).toString()+ "/videos/${it1}.mp4").absolutePath)
+                }
                 adapter.separatedImages.removeAt(it)
             }
             selectedItems.clear()
             adapter.notifyDataSetChanged()
+            finishActionMode()
         }
         dialogFragment.show(supportFragmentManager, "MyDialog")
     }
@@ -113,13 +117,16 @@ class GalleryActivity : AppCompatActivity() {
     fun onShareClick(v: View){
         var sendArr: ArrayList<Uri> = ArrayList()
         selectedItems.forEach{
-            val file = adapter.getItemPath(it)?.let { it1 -> File(it1) }
+            val file = adapter.getItemPath(it)?.let { it1 ->
+                if (it1.contains("mirrorImages")) File(it1)
+                else File(this.getExternalFilesDir( "" ).toString()+ "/videos/${it1}.mp4")
+            }
             if (file!=null) sendArr.add(FileProvider.getUriForFile(this, "${this.packageName}.provider", file))
         }
 
         val intent = Intent().apply {
             action = Intent.ACTION_SEND_MULTIPLE
-            type = "image/* video/*"
+            type = "*/*"
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, sendArr)
         }
         startActivity(Intent.createChooser(intent, "Share images"))
@@ -137,7 +144,7 @@ class GalleryActivity : AppCompatActivity() {
         isActionMode = true
         val delete = findViewById<ImageView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.galleryDelete)
         val share = findViewById<ImageView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.galleryShare)
-        val save = findViewById<ImageView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.GalleryClose_save)
+        val save = findViewById<ImageButton>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.GalleryClose_save)
         delete.visibility = View.VISIBLE
         share.visibility = View.VISIBLE
         save.setImageDrawable(ContextCompat.getDrawable(this@GalleryActivity,
@@ -177,12 +184,13 @@ class GalleryActivity : AppCompatActivity() {
         isActionMode = false
         val delete = findViewById<ImageView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.galleryDelete)
         val share = findViewById<ImageView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.galleryShare)
-        val save = findViewById<ImageView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.GalleryClose_save)
+        val save = findViewById<ImageButton>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.GalleryClose_save)
         delete.visibility = View.GONE
         share.visibility = View.GONE
         save.setImageDrawable(ContextCompat.getDrawable(this@GalleryActivity,
             mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.drawable.close
         ))
+        findViewById<TextView>(R.id.galleryTitle).text = resources.getString(R.string.gallery_title)
         selectedItems.clear()
     }
 
@@ -191,8 +199,9 @@ class GalleryActivity : AppCompatActivity() {
         val images = mutableMapOf<String, Bitmap>()
         if (folder.exists()) {
             for (file in folder.listFiles()) {
-                println("knknknknk"+file.absolutePath)
-                images[file.absolutePath] = BitmapFactory.decodeFile(file.absolutePath)
+                try {
+                    images[file.absolutePath] = BitmapFactory.decodeFile(file.absolutePath)
+                }catch (ex: Exception){}
             }
         }
         return images

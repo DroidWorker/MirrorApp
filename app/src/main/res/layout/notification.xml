@@ -14,16 +14,16 @@
         android:layout_marginStart="8dp"
         android:layout_weight="10"
         android:text="text"
-        android:textAppearance="@style/TextAppearance.Compat.Notification.Title" />
+        android:textAppearance="@style/TextAppearance.Compat.Notification.Title"
+        android:textColor="#A3000000" />
 
     <ImageButton
-        android:id="@+id/imageButton2"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:id="@+id/imageButton222"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_marginEnd="40dp"
         android:layout_weight="1"
-        android:background="@android:color/transparent"
-        android:src="@drawable/admob_close_button_black_circle_white_cross"
-        app:srcCompat="@drawable/admob_close_button_black_circle_white_cross" />
+        android:background="@drawable/rounded_gray"
+        android:src="@drawable/close" />
 
 </LinearLayout>

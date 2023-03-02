@@ -54,7 +54,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
         val maskView = findViewById<ExpandableHeightGridView>(R.id.mascView)
 
         val txtp1 = resources.getString(R.string.pay_description)+" "+resources.getString(R.string.price1)
-        val txtp2 = resources.getString(R.string.pay_description)+" "+resources.getString(R.string.price2)
+        val txtp2 = resources.getString(R.string.pay_description_year)+" "+resources.getString(R.string.price2)
         payDescription.text = txtp1
         rb1.isChecked = true
 
@@ -79,13 +79,18 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
             rb2.isChecked = false
         }
         p2.setOnClickListener{
-            tarif = "month"
+            tarif = "year"
             payDescription.text = txtp2
             p1.background = ContextCompat.getDrawable(this@PayActivity, R.drawable.rounded_corners_off)
             p2.background = ContextCompat.getDrawable(this@PayActivity, R.drawable.rounded_corners)
             rb2.isChecked = true
             rb1.isChecked = false
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        billingClient.endConnection()
     }
 
     fun openPP(v : View){
@@ -159,8 +164,8 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
     private fun initiatePurchase() {
         println("stttteeeep2")
         val skuList: MutableList<String> = ArrayList()
-        skuList.add("mons67r")
-        skuList.add("year201r")
+        if (tarif=="week")skuList.add("mons67r")
+        else skuList.add("year201r")
         val params = SkuDetailsParams.newBuilder()
         params.setSkusList(skuList).setType(BillingClient.SkuType.SUBS)
         val billingResult = billingClient!!.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
@@ -211,7 +216,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
             //if item is purchased
                 val sky = if(tarif == "week") "mons67r"
                             else "year201r"
-            if (purchase.skus.contains("sky") && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+            if (purchase.skus.contains(sky) && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
 
                 // else purchase is valid
                 //if item is purchased and not acknowledged
@@ -223,18 +228,19 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
                 } else {
                     // Grant entitlement to the user on item purchase
                     // restart activity
+                        viewModel.isADActive = false
                     if (viewModel.subscriptionType=="off") {
-                        viewModel.subscriptionType = "week"
+                        viewModel.subscriptionType = if(tarif == "week") "week"
+                                                        else "year"
                         Toast.makeText(applicationContext, "Item Purchased", Toast.LENGTH_SHORT).show()
-                        recreate()
+                        //recreate()
+                        finish()
                     }
                 }
-            } else if (purchase.skus.contains("sky") && purchase.purchaseState == Purchase.PurchaseState.PENDING) {
+            } else if (purchase.skus.contains(sky) && purchase.purchaseState == Purchase.PurchaseState.PENDING) {
                 Toast.makeText(applicationContext,
                     "Purchase is Pending. Please complete Transaction", Toast.LENGTH_SHORT).show()
-            } else if (purchase.skus.contains("sky") && purchase.purchaseState == Purchase.PurchaseState.UNSPECIFIED_STATE) {
-                viewModel.subscriptionType = "week"
-                viewModel.isADActive = false
+            } else if (purchase.skus.contains(sky) && purchase.purchaseState == Purchase.PurchaseState.UNSPECIFIED_STATE) {
                 Toast.makeText(applicationContext, "Purchase Status Unknown", Toast.LENGTH_SHORT).show()
             }
         }
@@ -249,5 +255,47 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
         }
     }
 
+    fun launchSubscriptionRestoreFlow(v: View) {
+        if (!billingClient.isReady) {
+            billingClient = BillingClient.newBuilder(this)
+                .enablePendingPurchases()
+                .setListener(this)
+                .build()
+        }
+
+        billingClient.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(billingResult: BillingResult) {
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    val skuList = ArrayList<String>()
+                    if (tarif=="week")skuList.add("mons67r")
+                    else skuList.add("year201r")
+
+                    val params = SkuDetailsParams.newBuilder()
+                        .setSkusList(skuList)
+                        .setType(BillingClient.SkuType.SUBS)
+                        .build()
+
+                    billingClient.querySkuDetailsAsync(params) { billingResult, skuDetailsList ->
+                        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
+                            for (skuDetails in skuDetailsList) {
+                                if (skuDetails.sku == "mons67r") {
+                                    val flowParams = BillingFlowParams.newBuilder()
+                                        .setSkuDetails(skuDetails)
+                                        .build()
+
+                                    billingClient.launchBillingFlow(this@PayActivity, flowParams)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            override fun onBillingServiceDisconnected() {
+                // Try to restart the connection on the next request to
+                // Google Play by calling the startConnection() method.
+            }
+        })
+    }
 
 }

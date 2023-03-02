@@ -11,7 +11,7 @@ android {
         applicationId "mirror.hand.makeup.shaving.best.zoom.pocket.selfie"
         minSdk 23
         targetSdk 32
-        versionCode 3
+        versionCode 6
         versionName "1.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -74,4 +74,7 @@ dependencies {
 
     //video
     implementation 'com.github.MasayukiSuda:CameraRecorder-android:v0.1.5'
+
+    //carousel
+    implementation 'com.github.MarcinOrlowski:CarouselPicker:v1.4.0'
 }

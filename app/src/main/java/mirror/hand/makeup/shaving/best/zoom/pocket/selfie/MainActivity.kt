@@ -2,6 +2,7 @@ package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
 import android.Manifest
 import android.Manifest.permission.CAMERA
+import android.Manifest.permission.RECORD_AUDIO
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -10,6 +11,8 @@ import android.graphics.*
 import android.hardware.Camera
 import android.hardware.camera2.*
 import android.hardware.camera2.CameraCaptureSession.CaptureCallback
+import android.hardware.camera2.CaptureRequest.LENS_FOCUS_DISTANCE
+import android.hardware.camera2.CaptureResult.LENS_FOCUS_DISTANCE
 import android.media.Image
 import android.media.ImageReader
 import android.media.ImageReader.OnImageAvailableListener
@@ -24,6 +27,8 @@ import android.util.Log
 import android.util.Size
 import android.view.*
 import android.view.animation.AnimationUtils
+import android.view.animation.LinearInterpolator
+import android.view.animation.OvershootInterpolator
 import android.view.animation.TranslateAnimation
 import android.widget.*
 import androidx.activity.viewModels
@@ -38,10 +43,8 @@ import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
 import com.google.android.material.button.MaterialButton
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
-import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.GestureListener
-import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.SmoothBottomSheetDialog
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.*
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.Timer
-import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.VIdeoTool
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -59,6 +62,7 @@ class MainActivity : AppCompatActivity() {
     var isCameraReady = false
     var isCamStarted = false
     var isInShot = false
+    var is360Mode = false
 
     var cameraMode = "photo"
 
@@ -126,10 +130,10 @@ class MainActivity : AppCompatActivity() {
         // Создаем GestureDetector
         val gestureListener = GestureListener()
         gestureListener.swipeRight = {
-            onMackClick(mask1)
+            onMackClick(mask1, 3)
         }
         gestureListener.swipeLeft = {
-            onMackClick(mask4)
+            onMackClick(mask4, 3)
         }
         gestureListener.click = {
             onMackClick(gestureListener.lastClickedView!!)
@@ -179,16 +183,79 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
         })
 
+
+        //vidrobuttonListener
+        val folder = File(ctx.getExternalFilesDir( "" ).toString()+ "/videos")
+        folder.mkdirs()
+        if (folder.exists())
+            findViewById<CameraVideoButton>(R.id.videoShotButton).actionListener = object : CameraVideoButton.ActionListener{
+                override fun onStartRecord() {
+                    val filename = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        LocalTime.now().toString().replace(".","_").replace(":","_")
+                    } else {
+                        Random().nextInt()
+                    }
+                    if (/*isOpen && */cameraMode == "video") {
+                        //startRecording()
+                        if (myCameras?.size != null && myCameras?.size!! >= openedCamera) myCameras?.get(
+                            openedCamera
+                        )?.closeCamera()
+                        isCamStarted = false
+                        isInShot = false
+                        stopBackgroundThread()
+                        //val cam : Camera = Camera.open()
+                        //vt?.startRecording()
+                        vt = VIdeoTool(ctx, this@MainActivity)
+                        val folder = File(ctx.getExternalFilesDir("").toString() + "/videos")
+                        folder.mkdirs()
+                        val f = File(ctx.getExternalFilesDir("").toString() + "/videos/${filename}.mp4")
+                        f.createNewFile()
+                        vt?.startCam(f.absolutePath)
+                    }
+                }
+
+                override fun onEndRecord() {
+                    if (/*isOpen &&*/cameraMode == "video") {
+                        vt?.destroy()
+                        val outPath = vt?.stopCam()
+
+                        vt = null
+                        val intent = Intent(this@MainActivity, VideoActivity::class.java)
+                        intent.putExtra("imgPath", outPath)
+                        intent.putExtra("mode", "preview")
+                        startActivity(intent)
+                        myCameras?.get(openedCamera)?.openCamera()
+                    }
+                }
+
+                override fun onDurationTooShortError() {
+                    return
+                }
+
+                override fun onSingleTap() {
+                    return
+                }
+
+                override fun onCancelled() {
+                    return
+                }
+
+            }
     }
 
     override fun onResume(){
         super.onResume()
+        if (!is360Mode)onMirrorClick(findViewById(R.id.buttonMirror))
+        else on360Click(findViewById(R.id.button360))
         if (userViewModel.isFirstLaunch && isAppReady){
             userViewModel.isFirstLaunch = false
             val onboardingIntent = Intent(this@MainActivity, OnboardingActivity::class.java)
             startActivity(onboardingIntent)
         }else if(ContextCompat.checkSelfPermission(this, CAMERA)==PackageManager.PERMISSION_DENIED&&isAppReady){
-            val caIntent = Intent(this@MainActivity, mirror.hand.makeup.shaving.best.zoom.pocket.selfie.CameraAccessActivity::class.java)
+            val caIntent = Intent(this@MainActivity, CameraAccessActivity::class.java)
+            startActivity(caIntent)
+        }else if(ContextCompat.checkSelfPermission(this, RECORD_AUDIO)==PackageManager.PERMISSION_DENIED&&isAppReady){
+            val caIntent = Intent(this@MainActivity, CameraAccessActivity::class.java)
             startActivity(caIntent)
         }
         else {
@@ -197,7 +264,7 @@ class MainActivity : AppCompatActivity() {
                 this
             ) { }
             //синхронизируем с галереей
-            if(userViewModel.lastImagePath!="err") {
+            if(userViewModel.lastImagePath!="err"&&File(userViewModel.lastImagePath).exists()) {
                 findViewById<ImageView>(R.id.openGalery).setImageURI(Uri.fromFile(File(userViewModel.lastImagePath)))
             }
             val mAdView :AdView = findViewById(R.id.adViewMain)
@@ -344,7 +411,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun onMackClick(v: View){
+    fun onMackClick(v: View, offsetkoeff : Int = 1){
+        if(isInShot) return
         val mascArray : List<Int>
         val mascPreviewArray: List<Int>
         if (userViewModel.isADActive) {
@@ -436,18 +504,35 @@ class MainActivity : AppCompatActivity() {
         }
         if(v.id==R.id.mask3||v.id==R.id.mask4) {
             val animation = AnimationUtils.loadAnimation(this, R.anim.slide_mask)
-            mask1.startAnimation(animation)
-            mask2.startAnimation(animation)
-            maskHidden.startAnimation(animation)
-            mask3.startAnimation(animation)
-            mask4.startAnimation(animation)
-            currentIndex = (currentIndex + 1) % mascPreviewArray.size
-            mask1.setImageResource(mascPreviewArray[getImdex(false, 2, mascPreviewArray.size)])
-            mask2.setImageResource(mascPreviewArray[getImdex(false, 1, mascPreviewArray.size)])
-            maskHidden.setImageResource(mascPreviewArray[currentIndex])
-            mask3.setImageResource(mascPreviewArray[getImdex(step = 1, size = mascPreviewArray.size)])
-            mask4.setImageResource(mascPreviewArray[getImdex(step = 2, size = mascPreviewArray.size)])
+            animation.interpolator = LinearInterpolator()
+            maskHidden.visibility = View.VISIBLE
+            for (i in 0..offsetkoeff) {
+                if (i==offsetkoeff) animation.interpolator = OvershootInterpolator()
+                mask1.startAnimation(animation)
+                mask2.startAnimation(animation)
+                maskHidden.startAnimation(animation)
+                mask3.startAnimation(animation)
+                mask4.startAnimation(animation)
+                currentIndex = (currentIndex + 1) % mascPreviewArray.size
+                mask1.setImageResource(mascPreviewArray[getImdex(false, 2, mascPreviewArray.size)])
+                mask2.setImageResource(mascPreviewArray[getImdex(false, 1, mascPreviewArray.size)])
+                maskHidden.setImageResource(mascPreviewArray[currentIndex])
+                mask3.setImageResource(
+                    mascPreviewArray[getImdex(
+                        step = 1,
+                        size = mascPreviewArray.size
+                    )]
+                )
+                mask4.setImageResource(
+                    mascPreviewArray[getImdex(
+                        step = 2,
+                        size = mascPreviewArray.size
+                    )]
+                )
+            }
+            maskHidden.visibility = View.INVISIBLE
         }else{
+            maskHidden.visibility=View.VISIBLE
             val animation = AnimationUtils.loadAnimation(this, R.anim.slide_mask_reverce)
             mask1.startAnimation(animation)
             mask2.startAnimation(animation)
@@ -460,6 +545,7 @@ class MainActivity : AppCompatActivity() {
             maskHidden.setImageResource(mascPreviewArray[currentIndex])
             mask3.setImageResource(mascPreviewArray[getImdex(step = 1, size = mascPreviewArray.size)])
             mask4.setImageResource(mascPreviewArray[getImdex(step = 2, size = mascPreviewArray.size)])
+            maskHidden.visibility=View.INVISIBLE
         }
         val omaskView = findViewById<ImageView>(R.id.overmaskView)
         omaskView.setImageResource(mascArray[currentIndex])
@@ -477,11 +563,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onSettingsClick(V: View){
+        if(isInShot) return
         val intent = Intent(this@MainActivity, SettingsActivity::class.java)
         startActivity(intent)
     }
 
     fun onMirrorClick(v: View){
+        if(isInShot) return
+        is360Mode =  false
         isMirrorSelected = true
         val ll = findViewById<LinearLayout>(R.id.moveContainer)
         val bMirror = findViewById<TextView>(R.id.buttonMirror)
@@ -505,10 +594,18 @@ class MainActivity : AppCompatActivity() {
             bMirror.setTextColor(Color.BLACK)
             b360.setTextColor(Color.WHITE)
         }
+
+        //hide videoShotButton
+        val vsb : CameraVideoButton = findViewById(R.id.videoShotButton)
+        vsb.visibility = View.INVISIBLE
+        shohtButtin.visibility = View.VISIBLE
+
         cameraMode = "photo"
     }
 
     fun on360Click(v: View){
+        if(isInShot) return
+        is360Mode = true
         isMirrorSelected =  false
         val ll = findViewById<LinearLayout>(R.id.moveContainer)
         val bMirror = findViewById<TextView>(R.id.buttonMirror)
@@ -537,10 +634,18 @@ class MainActivity : AppCompatActivity() {
             userViewModel.is360FirstLaunch = false
             startActivity(intent)
         }
+
+        //show videoShotButton
+        val vsb : CameraVideoButton = findViewById(R.id.videoShotButton)
+        vsb.enableVideoRecording(true)
+        vsb.visibility = View.VISIBLE
+        shohtButtin.visibility = View.INVISIBLE
+
         cameraMode = "video"
     }
 
     fun onFlipClick(v: View){
+        if(isInShot) return
         val matrix = Matrix()
         if (!flipEnabled) {
             matrix.setScale(-1f, 1f, mImageView.width / 2f, mImageView.height / 2f)
@@ -554,10 +659,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onFlashlightClick(V: View){
+        if(isInShot) return
         mCameraManager?.let { myCameras?.get(openedCamera)?.turnOnFlashlight(it) }
     }
 
     fun onBackLightClick(v: View){
+        if(isInShot) return
         val bMirror = findViewById<TextView>(R.id.buttonMirror)
         val b360 = findViewById<TextView>(R.id.button360)
         val bBacklight = findViewById<ImageButton>(R.id.buttonBacklight)
@@ -602,16 +709,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onInfo360Click(v: View){
+        if(isInShot) return
         val intent = Intent(this@MainActivity, Info360Activity::class.java)
         startActivity(intent)
     }
 
     fun onOpengalleryClick(v: View){
+        if(isInShot) return
         val intent = Intent(this@MainActivity, mirror.hand.makeup.shaving.best.zoom.pocket.selfie.GalleryActivity::class.java)
         startActivity(intent)
     }
 
     fun noAdsClick(v: View){
+        if(isInShot) return
         val intent = Intent(this@MainActivity, PayActivity::class.java)
         startActivity(intent)
     }
@@ -621,8 +731,6 @@ class MainActivity : AppCompatActivity() {
             if (!isInShot) {
                 myCameras?.get(openedCamera)?.makePhoto()
                 isInShot = true
-            } else {
-                isInShot=false
             }
         }
     }
@@ -672,10 +780,7 @@ class MainActivity : AppCompatActivity() {
                     characteristics = mCameraManager?.getCameraCharacteristics(mCameraID)
                     val focusRange = characteristics?.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE) to
                             characteristics?.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE)
-                    if(focusRange.first!=null&&focusRange.second!=null) {
-                        seekbar.progress = (focusRange.second!! / 2 * 100f).toInt()
-                        seekbar.max = (focusRange.second!! * 100f).toInt()
-                    }
+                    println("staaaaaaaaaaaaaa"+focusRange)
                 }
             } catch (e: Exception) {
                 Log.i("opencamerr", e.localizedMessage)
@@ -694,7 +799,7 @@ class MainActivity : AppCompatActivity() {
             mCameraID = cameraID
             val folder = File(ctx.getExternalFilesDir( "" ).toString()+ "/videos")
             folder.mkdirs()
-            if (folder.exists()) {
+            /*if (folder.exists()) {
                 //videoFile!!.createNewFile()
                 shohtButtin.setOnTouchListener { view, motionEvent ->
                     val filename = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -741,7 +846,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                 }
-            }
+            }*/
         }
 
         fun turnOnFlashlight(cameraManager: CameraManager) {
@@ -757,7 +862,6 @@ class MainActivity : AppCompatActivity() {
                         flashlightEnabled = false
                     }
                 } else{
-                    println("efefefefef")
                     val cameraId =  "0"
                     val characteristics2 = cameraManager.getCameraCharacteristics(cameraId)
                     val support2 = characteristics2.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
@@ -797,14 +901,14 @@ class MainActivity : AppCompatActivity() {
                             val surface = Surface(texture)
 
                             // Create a new capture request with the desired focus distance
-                            val captureRequestBuilder = mCameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
+                            val captureRequestBuilder = mCameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
                             captureRequestBuilder?.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
                             captureRequestBuilder?.set(CaptureRequest.LENS_FOCUS_DISTANCE, desiredFocusDistance)
                             captureRequestBuilder?.addTarget(surface)
                             captureRequestBuilder?.build()
 
                             // Update the focus distance in the current capture session
-                            if (captureRequestBuilder != null) {
+                            if (captureRequestBuilder != null && mCaptureSession!=null) {
                                 mCaptureSession?.setRepeatingRequest(captureRequestBuilder.build(), null, null)
                             }
                         } catch (e: CameraAccessException) {
@@ -830,7 +934,6 @@ class MainActivity : AppCompatActivity() {
             val viewHeight: Int = mImageView.height
             val aspectRatio: Float = sizes[1].width / sizes[1].height.toFloat()
             mImageView.setLayoutParams(FrameLayout.LayoutParams(viewWidth*aspectRatio.toInt(), viewHeight*aspectRatio.toInt()))
-            //texture?.setDefaultBufferSize(sizes[1].height,sizes[1].width)
             texture?.setDefaultBufferSize(viewHeight*aspectRatio.toInt(),viewWidth*aspectRatio.toInt())
             mImageReader = ImageReader.newInstance(sizes[1].height,sizes[1].width, ImageFormat.JPEG,1)
             mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener, null)
@@ -910,7 +1013,7 @@ class MainActivity : AppCompatActivity() {
                                 override fun onConfigured(session: CameraCaptureSession) {
                                     mCaptureSession = session
                                     try {
-                                        mCaptureSession!!.setRepeatingRequest(builder.build(), null, null)
+                                        mCaptureSession?.setRepeatingRequest(builder.build(), null, null)
                                         updatePreview(builder)
                                     } catch (e: CameraAccessException) {
                                         e.printStackTrace()
@@ -928,15 +1031,28 @@ class MainActivity : AppCompatActivity() {
         }
         private fun updatePreview(captureRequestBuilder: CaptureRequest.Builder) {
             if (mCameraDevice == null) return
-            mCaptureSession!!.setRepeatingRequest(captureRequestBuilder.build(), null, null)
+            mCaptureSession?.setRepeatingRequest(captureRequestBuilder.build(), null, null)
         }
 
         fun makePhoto() {
             try {
+                //получаем необходимую ориентацию
+                val display = (ctx.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+                val rotation = display.rotation
+                val isFrontCamera = characteristics?.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
+
+                var orientation = 0
+                when (rotation) {
+                    Surface.ROTATION_0 -> orientation = if (isFrontCamera) 270 else 90
+                    Surface.ROTATION_90 -> orientation = 0
+                    Surface.ROTATION_180 -> orientation = if (isFrontCamera) 90 else 270
+                    Surface.ROTATION_270 -> orientation = 180
+                }
+
                 // This is the CaptureRequest.Builder that we use to take a picture.
                 val captureBuilder =
-                    mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
-                captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, 270)
+                    mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+                captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, orientation)
                 captureBuilder.addTarget(mImageReader!!.surface)
                 val CaptureCallback: CaptureCallback = object : CaptureCallback() {
                     override fun onCaptureCompleted(

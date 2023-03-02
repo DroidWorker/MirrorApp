@@ -45,7 +45,7 @@ class FullscreenActivity : AppCompatActivity() {
         imageView.setImageBitmap(BitmapFactory.decodeFile(path))
 
         if (mode=="preview") {
-            findViewById<ImageButton>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.imageButton3).visibility = View.VISIBLE
+            findViewById<ImageButton>(R.id.imageButton3).visibility = View.VISIBLE
         }
     }
 

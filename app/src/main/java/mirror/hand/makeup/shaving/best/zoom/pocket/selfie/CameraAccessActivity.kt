@@ -12,7 +12,7 @@ class CameraAccessActivity : AppCompatActivity() {
     }
 
     fun getAccess(v: View){
-        requestPermissions(arrayOf(CAMERA, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE), 100)
+        requestPermissions(arrayOf(CAMERA, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, RECORD_AUDIO), 100)
         finish()
     }
 }
