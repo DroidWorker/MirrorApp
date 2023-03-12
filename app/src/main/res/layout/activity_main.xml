@@ -75,6 +75,20 @@
             app:srcCompat="@drawable/admob_close_button_white_circle_black_cross" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <TextView
+        android:id="@+id/videobottext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/rounded_white"
+        android:padding="10dp"
+        android:text="@string/video_bottext"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/imageContainer"
         android:layout_width="match_parent"
@@ -191,18 +205,6 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageButton
-        android:id="@+id/imageButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/rounded_white"
-        android:onClick="onSettingsClick"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/clTop"
-        app:srcCompat="@drawable/setting" />
-
-    <ImageButton
         android:id="@+id/imageView7"
         android:layout_width="60dp"
         android:layout_height="40dp"
@@ -213,6 +215,18 @@
         app:layout_constraintStart_toEndOf="@+id/button2"
         app:layout_constraintTop_toBottomOf="@id/clTop"
         app:srcCompat="@drawable/noads" />
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/rounded_white"
+        android:onClick="onSettingsClick"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/clTop"
+        app:srcCompat="@drawable/setting" />
 
     <ImageButton
         android:id="@+id/button2"
@@ -256,13 +270,22 @@
         app:layout_constraintTop_toBottomOf="@id/clTop"
         app:srcCompat="@drawable/backlight" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/carousel"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@+id/videoShotButton"
+        app:layout_constraintTop_toTopOf="@+id/shotButton" />
+
     <ImageButton
         android:id="@+id/mask4"
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:layout_marginBottom="16dp"
         android:background="@android:color/transparent"
-        android:onClick="onMackClick"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/imageContainer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/mask3"
@@ -275,7 +298,7 @@
         android:layout_marginEnd="1dp"
         android:layout_marginBottom="16dp"
         android:background="@android:color/transparent"
-        android:onClick="onMackClick"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/imageContainer"
         app:layout_constraintEnd_toStartOf="@+id/mask4"
         app:layout_constraintStart_toEndOf="@+id/shotButton"
@@ -299,7 +322,7 @@
         android:layout_height="64dp"
         android:layout_marginBottom="16dp"
         android:background="@android:color/transparent"
-        android:onClick="onMackClick"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/imageContainer"
         app:layout_constraintEnd_toStartOf="@+id/shotButton"
         app:layout_constraintStart_toEndOf="@+id/mask1"
@@ -312,7 +335,7 @@
         android:layout_height="64dp"
         android:layout_marginBottom="16dp"
         android:background="@android:color/transparent"
-        android:onClick="onMackClick"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/imageContainer"
         app:layout_constraintEnd_toStartOf="@+id/mask2"
         app:layout_constraintStart_toStartOf="parent"

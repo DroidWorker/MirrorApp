@@ -22,9 +22,13 @@ import androidx.fragment.app.DialogFragment
 import com.android.billingclient.api.*
 import com.google.android.gms.common.ErrorDialogFragment.newInstance
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.NotificationReceiver
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.SmoothBottomSheetDialog
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
@@ -105,7 +109,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
             }
 
         billingClient = BillingClient.newBuilder(this)
-            .setListener(purchasesUpdatedListener)
+            .setListener(this)
             .enablePendingPurchases()
             .build()
 
@@ -244,10 +248,11 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                     data = Uri.parse("mailto:")
                     putExtra(Intent.EXTRA_EMAIL, arrayOf("smarteasyapps17@gmail.com"))
                     putExtra(Intent.EXTRA_SUBJECT, "Обращение пользователя AppMirror")
-                    putExtra(Intent.EXTRA_TEXT, "$answer, ")
+                    putExtra(Intent.EXTRA_TEXT, "$answer, ${text.text}")
                 }
                 if (intent.resolveActivity(this.packageManager) != null) {
                     startActivity(Intent.createChooser(intent, "Choose an Email client :"));
+                    bottomSheetDialog.hide()
                 } else {
                     Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
                 }
@@ -339,6 +344,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                     }
                     if (intent.resolveActivity(this.packageManager) != null) {
                         startActivity(Intent.createChooser(intent, "Send mail..."))
+                        bottomSheetDialog.hide()
                     } else {
                         Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
                     }
@@ -482,7 +488,6 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
     }
 
     private fun initiatePurchase(isSubscr: Boolean, skyId: Int) {
-        println("stttteeeep2")
         val skuList: MutableList<String> = ArrayList()
         /*skuList.add("deliciousdinner")
         skuList.add("burger")
@@ -529,7 +534,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         }
     }
 
-    override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
+        override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
         //if item subscribed
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
             handlePurchases(purchases)
@@ -558,13 +563,14 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                         .setPurchaseToken(purchase.purchaseToken)
                         .build()
                     billingClient!!.acknowledgePurchase(acknowledgePurchaseParams, ackPurchase)
+                    viewModel.addLog(Date().toString(), "purchaseAcknowleged")
                 } else {
                     // Grant entitlement to the user on item purchase
                     // restart activity
                     //if (viewModel.subscriptionType=="off") {
                         //viewModel.subscriptionType = "week"
                         Toast.makeText(applicationContext, "Item Purchased", Toast.LENGTH_SHORT).show()
-                        recreate()
+                        //recreate()
                     //}
                 }
             } else if (purchase.skus.contains(sky) && purchase.purchaseState == Purchase.PurchaseState.PENDING) {

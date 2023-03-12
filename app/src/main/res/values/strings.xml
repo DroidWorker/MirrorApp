@@ -86,4 +86,5 @@
 
     <!--config-->
     <string name="splashType">splashTextEN</string>
+    <string name="video_bottext">Show face from some angles</string>
 </resources>

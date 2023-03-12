@@ -86,4 +86,5 @@
     <string name="okey">Хорошо</string>
     <!--config-->
     <string name="splashType">splashTextRU</string>
+    <string name="video_bottext">Покажите лицо со всех сторон</string>
 </resources>

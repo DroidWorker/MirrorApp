@@ -7,14 +7,24 @@
     android:background="#000000"
     tools:context=".VideoActivity">
 
-    <VideoView
+    <!--<VideoView
         android:id="@+id/videoView"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/timelineView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />-->
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/videoView"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        app:use_controller="false"
+        app:layout_constraintBottom_toTopOf="@+id/timelineView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
 
     <mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.TimelineView
         android:id="@+id/timelineView"
@@ -41,18 +51,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/arrow_back" />
-
-    <ImageButton
-        android:id="@+id/imageButton5"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/rounded_white"
-        android:onClick="onBackClick"
-        app:layout_constraintBottom_toBottomOf="@+id/videoView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@drawable/snowflake" />
 
     <ImageButton
         android:id="@+id/shareButton2"

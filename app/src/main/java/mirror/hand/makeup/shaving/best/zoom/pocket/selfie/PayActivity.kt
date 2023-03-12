@@ -40,7 +40,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
             }
 
         billingClient = BillingClient.newBuilder(this)
-            .setListener(purchasesUpdatedListener)
+            .setListener(this)
             .enablePendingPurchases()
             .build()
 
@@ -174,6 +174,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
             ) { billingResult, skuDetailsList ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     if (skuDetailsList != null && skuDetailsList.size > 0) {
+                        println("mkmkmkkmkmk"+skuDetailsList.size+"|||"+skuDetailsList)
                         val flowParams = BillingFlowParams.newBuilder()
                             .setSkuDetails(skuDetailsList[0])
                             .build()
@@ -225,6 +226,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
                         .setPurchaseToken(purchase.purchaseToken)
                         .build()
                     billingClient!!.acknowledgePurchase(acknowledgePurchaseParams, ackPurchase)
+                    viewModel.isADActive = false
                 } else {
                     // Grant entitlement to the user on item purchase
                     // restart activity

@@ -1,5 +1,6 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.TypedArray
@@ -11,6 +12,7 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R
 import kotlin.math.abs
@@ -50,7 +52,8 @@ class TimelineView : View {
     private var retriever: MediaMetadataRetriever? = null
     private var progressLeft = 0f
     private var progressRight = 1f
-    private var currentProgress = 0f;
+    private var currentProgress = 0f
+    private var stoppedDuration = 0L
     private var thumbWidth = 20f
     private var frameDimentionRatio = 1f
     private var videoLength = 0L
@@ -62,6 +65,7 @@ class TimelineView : View {
     private var seeking = false
     private var totalDuration: Long = 0
     private var cutMode: CutMode = CutMode.TRIM
+    var animation : ValueAnimator? = null
 
     var leftPosition: Long
         get() = ((progressLeft * totalDuration).toLong())
@@ -119,6 +123,29 @@ class TimelineView : View {
         if (seeking) return
         currentProgress = float
         invalidate()
+    }
+
+    fun smoothProgress() {
+        animation = ValueAnimator.ofFloat(currentProgress, 1f)
+        animation!!.duration = totalDuration-stoppedDuration+150//duration
+        animation!!.interpolator = LinearInterpolator()
+        animation!!.addUpdateListener {
+            setCurrentProgressValue(it.animatedValue as Float)
+            if (it.animatedValue==1f) {
+                animation=null
+                stoppedDuration=0
+                currentProgress=0f
+            }
+        }
+        animation!!.start()
+    }
+
+    fun pause(currentTime : Long){
+        animation?.pause()
+        stoppedDuration = currentTime
+    }
+    fun resume(){
+        animation?.resume()
     }
 
     fun init(context: Context) {
@@ -200,19 +227,19 @@ class TimelineView : View {
         val x = event.x
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                when {
-                    abs(x - width * progressLeft) < thumbWidth * 2 -> {
+                //when {
+                   /*abs(x - width * progressLeft) < thumbWidth * 2 -> {
                         pressedBtn = 0
-                    }
-                    abs(x - (width * currentProgress)) < thumbWidth * 2 -> {
+                    }*/
+                    //abs(x - (width * currentProgress)) < thumbWidth * 2 -> {
                         seeking = true
                         callback?.onSeekStart(
                             currentProgress,
                             (currentProgress * totalDuration).toLong()
                         )
                         pressedBtn = 1
-                    }
-                    abs(x - width * progressRight) < thumbWidth * 2 -> {
+                    //}
+                    /*abs(x - width * progressRight) < thumbWidth * 2 -> {
                         pressedBtn = 2
                         return true
                     }
@@ -220,12 +247,12 @@ class TimelineView : View {
                     else -> {
                         pressedBtn = -1
                     }
-                }
+                }*/
                 return pressedBtn >= 0
             }
             MotionEvent.ACTION_MOVE -> if (pressedBtn >= 0) {
                 val newProgress = x / measuredWidth
-                if (pressedBtn == 0 && newProgress < progressRight) {
+                /*if (pressedBtn == 0 && newProgress < progressRight) {
                     progressLeft = newProgress
                     callback?.onLeftProgress(progressLeft, (progressLeft * totalDuration).toLong())
 
@@ -235,7 +262,7 @@ class TimelineView : View {
                         progressRight,
                         (progressRight * totalDuration).toLong()
                     )
-                } else if (pressedBtn == 1) {
+                } else */if (pressedBtn == 1) {
                     currentProgress = newProgress
                     if (seeking) {
                         callback?.onSeek(
@@ -251,6 +278,9 @@ class TimelineView : View {
                 pressedBtn = -1
                 if (seeking) {
                     seeking = false
+                    stoppedDuration = (currentProgress * totalDuration).toLong()
+                    animation?.pause()
+                    animation = null
                     callback?.onStopSeek(
                         currentProgress,
                         (currentProgress * totalDuration).toLong()

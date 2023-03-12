@@ -39,13 +39,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:background="@drawable/rounded_transparent"
-            android:windowSoftInputMode="adjustPan"
+            android:background="@drawable/rounded_white"
             android:hint="@string/bsdr_send"
             android:text="@string/bsdr_send"
+            android:windowSoftInputMode="adjustPan"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/BSDReditText"/>
+            app:layout_constraintTop_toBottomOf="@+id/BSDReditText" />
 
         <EditText
             android:id="@+id/BSDReditText"
@@ -88,6 +88,7 @@
             android:id="@+id/radioGroup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView6">
 
             <RadioButton
@@ -168,7 +169,9 @@
         <RadioGroup
             android:id="@+id/radioGroup2"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <RadioButton
                 android:id="@+id/radioButton10"

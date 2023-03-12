@@ -133,11 +133,13 @@ class CameraVideoButton @JvmOverloads constructor(context: Context, attrs: Attri
         }
 
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
-            if (enablePhotoTaking) {
-                onSingleTap()
-                return true
+            if (enableVideoRecording&&!isRecording) {
+                onLongPressStart()
             }
-            return super.onSingleTapUp(e)
+            else if(enableVideoRecording&&isRecording){
+                onLongPressEnd()
+            }
+            return true
         }
     })
 
@@ -280,11 +282,14 @@ class CameraVideoButton @JvmOverloads constructor(context: Context, attrs: Attri
 
         //canvas.drawCircle(outerCircleMaxSize / 2, outerCircleMaxSize / 2, innerCircleCurrentSize / 2, innerCirclePaint)
         canvas.drawCircle(outerCircleMaxSize / 2, outerCircleMaxSize / 2, outerCircleCurrentSize / 2f, outerCirclePaint)
-        if (isRecording)canvas.drawRoundRect((outerCircleMaxSize-innerCircleMaxSize)/1.3f,(outerCircleMaxSize-innerCircleMaxSize)/1.3f ,outerCircleMaxSize-(outerCircleMaxSize-innerCircleMaxSize)/1.3f, outerCircleMaxSize-(outerCircleMaxSize-innerCircleMaxSize)/1.3f, 5f, 5f, innerCirclePaint)
-        else canvas.drawCircle(outerCircleMaxSize / 2, outerCircleMaxSize / 2, innerCircleCurrentSize / 3, innerCirclePaint)
-
-        if (isRecording) {
+        if (isRecording){
+            canvas.drawRoundRect((outerCircleMaxSize-innerCircleMaxSize)/1.3f,(outerCircleMaxSize-innerCircleMaxSize)/1.3f ,outerCircleMaxSize-(outerCircleMaxSize-innerCircleMaxSize)/1.3f, outerCircleMaxSize-(outerCircleMaxSize-innerCircleMaxSize)/1.3f, 5f, 5f, innerCirclePaint)
             canvas.drawArc(outerCircleBorderRect, -90f, calculateCurrentAngle(), false, outerCircleBorderPaint)
+        }
+        else {
+            outerCircleBorderPaint.alpha = 255
+            canvas.drawCircle(outerCircleMaxSize / 2, outerCircleMaxSize / 2, innerCircleCurrentSize / 4, innerCirclePaint)
+            canvas.drawArc(RectF(outerCircleMaxSize/2-outerCircleCurrentSize / 2f, outerCircleMaxSize/2-outerCircleCurrentSize / 2f, outerCircleMaxSize/2+outerCircleCurrentSize / 2f, outerCircleMaxSize/2+outerCircleCurrentSize / 2f), 0f, 360f, false, outerCircleBorderPaint)
         }
     }
 

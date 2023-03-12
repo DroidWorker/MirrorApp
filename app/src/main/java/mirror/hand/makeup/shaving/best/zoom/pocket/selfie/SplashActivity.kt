@@ -51,6 +51,7 @@ class SplashActivity : AppCompatActivity() {
         }
         remoteConfig.setConfigSettingsAsync(configSettings)
         viewModel.adBannerTimer=(remoteConfig.getLong("adBannerTimer").toInt())
+        viewModel.splashDelay=(remoteConfig.getLong("splashDelay").toInt())
 
         //syncronizedGP
         val purchasesUpdatedListener =
@@ -65,6 +66,27 @@ class SplashActivity : AppCompatActivity() {
 
         startConnection(billingClient)
 
+        val tv = findViewById<TextView>(R.id.splashText)
+        tv.text = viewModel.splashText
+        tv.setOnClickListener(View.OnClickListener {
+            val anim = AnimationUtils.loadAnimation(this, R.anim.diagonal)
+            anim.fillAfter = true
+            findViewById<TextView>(R.id.splashText).startAnimation(anim)
+            anim.setAnimationListener(object : AnimationListener {
+                override fun onAnimationStart(animation: Animation) {}
+                override fun onAnimationEnd(animation: Animation) {
+                    finish()
+                }
+
+                override fun onAnimationRepeat(animation: Animation) {}
+            })
+        })
+        Handler(Looper.getMainLooper()).postDelayed({
+            close()
+        }, 1500) // 3000 is the delayed time in milliseconds.
+    }
+
+    override fun onDestroy() {
         //start notification
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -120,26 +142,7 @@ class SplashActivity : AppCompatActivity() {
 // Отображаем уведомление
             notificationManager.notify(notificationId, builder.build())
         }
-
-
-        val tv = findViewById<TextView>(R.id.splashText)
-        tv.text = viewModel.splashText
-        tv.setOnClickListener(View.OnClickListener {
-            val anim = AnimationUtils.loadAnimation(this, R.anim.diagonal)
-            anim.fillAfter = true
-            findViewById<TextView>(R.id.splashText).startAnimation(anim)
-            anim.setAnimationListener(object : AnimationListener {
-                override fun onAnimationStart(animation: Animation) {}
-                override fun onAnimationEnd(animation: Animation) {
-                    finish()
-                }
-
-                override fun onAnimationRepeat(animation: Animation) {}
-            })
-        })
-        Handler(Looper.getMainLooper()).postDelayed({
-            close()
-        }, 3000) // 3000 is the delayed time in milliseconds.
+        super.onDestroy()
     }
 
     fun close(){

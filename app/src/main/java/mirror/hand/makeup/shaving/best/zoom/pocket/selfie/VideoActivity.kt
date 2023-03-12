@@ -2,6 +2,7 @@ package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.location.GnssAntennaInfo
 import android.media.MediaPlayer
 import android.media.MediaScannerConnection
 import android.net.Uri
@@ -9,15 +10,25 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
 import android.widget.ImageButton
+import android.widget.SeekBar
 import android.widget.Toast
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
+import com.google.android.exoplayer2.ExoPlaybackException
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.PlayerView
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.TimelineView
 import java.io.*
+import java.util.*
 
 class VideoActivity : AppCompatActivity() {
     lateinit var timeline : TimelineView
-    lateinit var videoView : VideoView
+    lateinit var playerView : PlayerView
+    lateinit var exoplayer : ExoPlayer
+    var videoViewDuration = 0
 
     var saveImg = false
     lateinit var mode: String
@@ -37,22 +48,39 @@ class VideoActivity : AppCompatActivity() {
         }
         val videoUri: Uri = Uri.fromFile(File(path))//Uri.parse("path/to/video.mp4")
 
-
-        videoView = findViewById(R.id.videoView)
         timeline = findViewById(R.id.timelineView)
         timeline.setVideoUri(videoUri)
-        videoView.setVideoURI(videoUri)
 
         //needed below line to properly pass the seek duration or if you dont set it you will get percent value
         //the seekMillis value will be icorrect in the callback
 
-        timeline.setTotalDuration(videoView.duration.toLong())
-        videoView.start()
+        exoplayer = ExoPlayer.Builder(this).build()
+        val mediaItem = MediaItem.fromUri(videoUri)
+        exoplayer.setMediaItem(mediaItem)
+        exoplayer.prepare()
 
+        playerView = findViewById<PlayerView>(R.id.videoView)
 
-        videoView.setOnCompletionListener(object : MediaPlayer.OnCompletionListener {
-            override fun onCompletion(mp: MediaPlayer?) {
-                videoView.seekTo(0)
+// Настраиваем PlayerView, чтобы он отображал ExoPlayer
+        playerView.player = exoplayer
+        exoplayer.playWhenReady = true
+
+        exoplayer.addListener(object : Player.Listener {
+            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                super.onPlayerStateChanged(playWhenReady, playbackState)
+                when(playbackState) {
+                    Player.STATE_ENDED -> {
+                        // Перематываем в начало видео после его окончания
+                        exoplayer.seekTo(0)
+                        isPlay = false
+                        findViewById<ImageButton>(R.id.imageButton6).setImageResource(R.drawable.play)
+                        exoplayer.playWhenReady = false
+                    }
+                    Player.STATE_READY -> {
+                        timeline.setTotalDuration(exoplayer.duration)
+                        if (exoplayer.playWhenReady)timeline.smoothProgress()
+                    }
+                }
             }
         })
 
@@ -65,6 +93,8 @@ class VideoActivity : AppCompatActivity() {
             }
 
             override fun onStopSeek(position: Float, seekMillis: Long) {
+                exoplayer.seekTo(seekMillis)
+                if(isPlay)timeline.smoothProgress()
             }
 
             override fun onLeftProgress(leftPos: Float, seekMillis: Long) {
@@ -82,13 +112,22 @@ class VideoActivity : AppCompatActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        //finish()
+        if(isPlay)onPausePlayClick(findViewById(R.id.imageButton6))
+    }
+
     fun onPausePlayClick(v: View){
         if (isPlay) {
-            videoView.pause()
+            exoplayer.pause()
+            timeline.pause(exoplayer.currentPosition)
             (v as ImageButton).setImageResource(R.drawable.play)
             isPlay = false
         }else{
-            videoView.start()
+            exoplayer.playWhenReady = true
+            if (timeline.animation!=null)timeline.resume()
+            else timeline.smoothProgress()
             (v as ImageButton).setImageResource(R.drawable.pause)
             isPlay = true
         }
@@ -127,8 +166,9 @@ class VideoActivity : AppCompatActivity() {
     fun onShareClick(v: View){
         try {
             val shareIntent = Intent(Intent.ACTION_SEND)
+            val fileUri = FileProvider.getUriForFile(this, "${this.packageName}.provider", File(path))
             shareIntent.type = "video/*"
-            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(File(path)))
+            shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri)
             startActivity(Intent.createChooser(shareIntent, "Поделиться видео"))
         }
         catch (ex: Exception){

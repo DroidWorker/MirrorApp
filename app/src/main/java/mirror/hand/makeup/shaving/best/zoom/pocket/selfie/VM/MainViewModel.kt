@@ -78,6 +78,13 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
         editor.apply()
     }
 
+    var splashDelay : Int
+        get() = sharedPreference.getInt("splashDelay", 3000)
+        set(value){
+            editor.putInt("splashDelay", value)
+            editor.apply()
+        }
+
     var lastImagePath : String
         get() = sharedPreference.getString("lastImagePath", "err") ?: "err"
         set(value){
@@ -85,12 +92,19 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
             editor.apply()
         }
 
+    fun addLog(key : String, value : String){
+        try {
+            val ref = firebase.getReference("appLog")
+            ref.child(key).setValue(value)
+        }catch (e : Exception){
+            println("errr "+e.localizedMessage)
+        }
+    }
 
     fun addVote(type : String, value : Int){
         try {
             val ref = firebase.getReference("votes/$type")
             ref.setValue(value)
-            println("set value "+type+" "+value)
         }catch (e : Exception){
             println("errr "+e.localizedMessage)
         }

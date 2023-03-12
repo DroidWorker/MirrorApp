@@ -13,11 +13,8 @@ import android.hardware.camera2.*
 import android.hardware.camera2.CameraCaptureSession.CaptureCallback
 import android.hardware.camera2.CaptureRequest.LENS_FOCUS_DISTANCE
 import android.hardware.camera2.CaptureResult.LENS_FOCUS_DISTANCE
-import android.media.Image
-import android.media.ImageReader
+import android.media.*
 import android.media.ImageReader.OnImageAvailableListener
-import android.media.MediaMetadataRetriever
-import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -38,19 +35,26 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSnapHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
 import com.google.android.material.button.MaterialButton
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.MascsAdapter
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.*
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.Timer
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.lang.Math.abs
 import java.nio.ByteBuffer
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZonedDateTime
 import java.util.*
 import kotlin.collections.RandomAccess
 
@@ -117,6 +121,111 @@ class MainActivity : AppCompatActivity() {
         maskHidden = findViewById(R.id.maskHidden)
         mask3 = findViewById(R.id.mask3)
         mask4 = findViewById(R.id.mask4)
+        val cp = findViewById<RecyclerView>(R.id.carousel)
+        val mascArray : List<Int>
+        val mascPreviewArray: ArrayList<Int>
+        if (userViewModel.isADActive) {
+            mascArray = listOf(
+                R.drawable.transparent_retro_borders,
+                R.drawable.mask_newlyweds,
+                R.drawable.transparent_retro_borders,
+                R.drawable.mask_squares,
+                R.drawable.transparent_retro_borders,
+                R.drawable.mask_flower_rhombus,
+                R.drawable.transparent_retro_borders,
+                R.drawable.mask_pixel_hearts,
+                R.drawable.mask_hearts,
+                R.drawable.transparent_retro_borders,
+                R.drawable.mask_christmas_tree,
+                R.drawable.mask_gold_frame,
+                R.drawable.transparent_retro_borders,
+                R.drawable.mask_yellow_neon,
+                R.drawable.mask_red_neon,
+                R.drawable.transparent_retro_borders,
+                R.drawable.mask_blue_neon,
+                R.drawable.transparent_retro_borders,
+                R.drawable.mask_film_rec
+            )
+            mascPreviewArray = arrayListOf(
+                R.drawable.preview_flower_circle_lock,
+                R.drawable.preview_name_newlyweds,
+                R.drawable.preview_folk_style_locked,
+                R.drawable.preview_squares,
+                R.drawable.preview_plaster_locked,
+                R.drawable.preview_flower_rhombus,
+                R.drawable.preview_animals_heart_locked,
+                R.drawable.preview_pixel_hearts,
+                R.drawable.preview_hearts,
+                R.drawable.preview_none,
+                R.drawable.preview_christmas_tree,
+                R.drawable.preview_gold_frame,
+                R.drawable.preview_exhibition_locked,
+                R.drawable.preview_yellow_neon,
+                R.drawable.preview_red_neon,
+                R.drawable.preview_blue_locked,
+                R.drawable.preview_blue_neon,
+                R.drawable.preview_rowan_locked,
+                R.drawable.preview_film_rec
+            )
+        }else{
+            mascArray = listOf(
+                R.drawable.mask_flower_circle,
+                R.drawable.mask_newlyweds,
+                R.drawable.mask_folk_style,
+                R.drawable.mask_squares,
+                R.drawable.mask_plaster,
+                R.drawable.mask_flower_rhombus,
+                R.drawable.mask_animals_heart,
+                R.drawable.mask_pixel_hearts,
+                R.drawable.mask_hearts,
+                R.drawable.transparent_retro_borders,
+                R.drawable.mask_christmas_tree,
+                R.drawable.mask_gold_frame,
+                R.drawable.mask_exhibition,
+                R.drawable.mask_yellow_neon,
+                R.drawable.mask_red_neon,
+                R.drawable.mask_blue,
+                R.drawable.mask_blue_neon,
+                R.drawable.mask_rowan,
+                R.drawable.mask_film_rec
+            )
+            mascPreviewArray = arrayListOf(
+                R.drawable.preview_flower_circle,
+                R.drawable.preview_name_newlyweds,
+                R.drawable.preview_folc_style,
+                R.drawable.preview_squares,
+                R.drawable.preview_plaster,
+                R.drawable.preview_flower_rhombus,
+                R.drawable.preview_animals_heart,
+                R.drawable.preview_pixel_hearts,
+                R.drawable.preview_hearts,
+                R.drawable.preview_none,
+                R.drawable.preview_christmas_tree,
+                R.drawable.preview_gold_frame,
+                R.drawable.preview_exhibition,
+                R.drawable.preview_yellow_neon,
+                R.drawable.preview_red_neon,
+                R.drawable.preview_blue,
+                R.drawable.preview_blue_neon,
+                R.drawable.preview_rowan,
+                R.drawable.preview_film_rec
+            )
+        }
+        val madapter = MascsAdapter(this, mascPreviewArray)
+        cp.adapter = madapter
+        cp.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        cp.scrollToPosition(Int.MAX_VALUE/2-3)
+        val snapHelper = LinearSnapHelper()
+        snapHelper.attachToRecyclerView(cp)
+        cp.setOnScrollChangeListener(View.OnScrollChangeListener{v, i, j, k, n->
+            val selectedView = snapHelper.findSnapView(cp.layoutManager)
+            currentIndex = selectedView?.let {
+                (cp.getChildAdapterPosition(it)) % mascPreviewArray.size
+            }?: 9
+            val omaskView = findViewById<ImageView>(R.id.overmaskView)
+            omaskView.setImageResource(mascArray[currentIndex])
+            currentMask = mascArray[currentIndex]
+        })
 
         //adTimer
         if (!Timer.isStarted)Timer.startTimer((userViewModel.adBannerTimer*60000).toLong())
@@ -190,6 +299,7 @@ class MainActivity : AppCompatActivity() {
         if (folder.exists())
             findViewById<CameraVideoButton>(R.id.videoShotButton).actionListener = object : CameraVideoButton.ActionListener{
                 override fun onStartRecord() {
+                    hideShowInterface()
                     val filename = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         LocalTime.now().toString().replace(".","_").replace(":","_")
                     } else {
@@ -216,6 +326,7 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onEndRecord() {
                     if (/*isOpen &&*/cameraMode == "video") {
+                        hideShowInterface(false)
                         vt?.destroy()
                         val outPath = vt?.stopCam()
 
@@ -281,7 +392,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        if(myCameras?.size!=null && myCameras?.size!! >= openedCamera)myCameras?.get(openedCamera)?.closeCamera()
+        try {
+            if (myCameras?.size != null && myCameras?.size!! >= openedCamera) myCameras?.get(
+                openedCamera
+            )?.closeCamera()
+        }catch (ex : java.lang.Exception){}
         isCamStarted=false
         isInShot = false
         stopBackgroundThread()
@@ -377,12 +492,13 @@ class MainActivity : AppCompatActivity() {
                 if (text?.text!!.length>2){
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse("mailto:")
-                        putExtra(Intent.EXTRA_EMAIL, arrayOf("test@test.test"))
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf("smarteasyapps17@gmail.com"))
                         putExtra(Intent.EXTRA_SUBJECT, "Обращение пользователя AppMirror")
-                        putExtra(Intent.EXTRA_TEXT, "")
+                        putExtra(Intent.EXTRA_TEXT, "${text.text}")
                     }
                     if (intent.resolveActivity(this.packageManager) != null) {
                         this.startActivity(intent)
+                        bottomSheetDialog.hide()
                     } else {
                         Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
                     }
@@ -747,6 +863,33 @@ class MainActivity : AppCompatActivity() {
         imageContainer.setPadding(light)
     }
 
+    private fun hideShowInterface(hide: Boolean = true){
+        if (hide) {
+            findViewById<TextView>(R.id.videobottext).visibility = View.VISIBLE
+            findViewById<ConstraintLayout>(R.id.constraintLayout).visibility = View.INVISIBLE
+            findViewById<ImageButton>(R.id.imageButton).visibility = View.INVISIBLE
+            findViewById<ImageButton>(R.id.imageView7).visibility = View.INVISIBLE
+            findViewById<ImageButton>(R.id.button2).visibility = View.INVISIBLE
+            findViewById<ImageButton>(R.id.buttonFlashlight).visibility = View.INVISIBLE
+            findViewById<ImageButton>(R.id.buttonBacklight).visibility = View.INVISIBLE
+            findViewById<SeekBar>(R.id.seekBar).visibility = View.INVISIBLE
+            findViewById<SeekBar>(R.id.seekBar3).visibility = View.INVISIBLE
+            findViewById<LinearLayout>(R.id.linearLayout3).visibility = View.INVISIBLE
+        }
+        else{
+            findViewById<TextView>(R.id.videobottext).visibility = View.GONE
+            findViewById<ConstraintLayout>(R.id.constraintLayout).visibility = View.VISIBLE
+            findViewById<ImageButton>(R.id.imageButton).visibility = View.VISIBLE
+            findViewById<ImageButton>(R.id.imageView7).visibility = View.VISIBLE
+            findViewById<ImageButton>(R.id.button2).visibility = View.VISIBLE
+            findViewById<ImageButton>(R.id.buttonFlashlight).visibility = View.VISIBLE
+            findViewById<ImageButton>(R.id.buttonBacklight).visibility = View.VISIBLE
+            findViewById<SeekBar>(R.id.seekBar).visibility = View.VISIBLE
+            findViewById<SeekBar>(R.id.seekBar3).visibility = View.VISIBLE
+            findViewById<LinearLayout>(R.id.linearLayout3).visibility = View.VISIBLE
+        }
+    }
+
     inner class CameraService(cameraManager: CameraManager, cameraID: String) {
         private val mCameraID: String
         private var mCameraDevice: CameraDevice? = null
@@ -763,7 +906,7 @@ class MainActivity : AppCompatActivity() {
         private var recorderSurface : Surface? = null
         var texture: SurfaceTexture? = null
 
-        private val mFile: File = File(ctx.getExternalFilesDir(null), "mirrorImages/1.png")
+        private val mFile: File = File(ctx.getExternalFilesDir(null), "mirrorImages/1.jpg")
         val isOpen: Boolean
             get() = mCameraDevice != null
         var videoStarted = false
@@ -799,54 +942,6 @@ class MainActivity : AppCompatActivity() {
             mCameraID = cameraID
             val folder = File(ctx.getExternalFilesDir( "" ).toString()+ "/videos")
             folder.mkdirs()
-            /*if (folder.exists()) {
-                //videoFile!!.createNewFile()
-                shohtButtin.setOnTouchListener { view, motionEvent ->
-                    val filename = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        LocalTime.now().toString().replace(".","_").replace(":","_")
-                    } else {
-                        Random().nextInt()
-                    }
-                    when (motionEvent.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            if (/*isOpen && */cameraMode == "video") {
-                                //startRecording()
-                                if(myCameras?.size!=null && myCameras?.size!! >= openedCamera)myCameras?.get(openedCamera)?.closeCamera()
-                                isCamStarted=false
-                                isInShot = false
-                                stopBackgroundThread()
-                                //val cam : Camera = Camera.open()
-                                //vt?.startRecording()
-                                vt=VIdeoTool(ctx, this@MainActivity)
-                                val folder = File(ctx.getExternalFilesDir( "" ).toString()+ "/videos")
-                                folder.mkdirs()
-                                val f = File(ctx.getExternalFilesDir( "" ).toString()+ "/videos/${filename}.mp4")
-                                f.createNewFile()
-                                vt?.startCam(f.absolutePath)
-                                true
-                            } else false
-                        }
-                        MotionEvent.ACTION_UP -> {
-                            if (/*isOpen &&*/cameraMode == "video") {
-                                //stopRecording()
-                                    //vt?.stopRecording()
-                                        vt?.destroy()
-                                val outPath = vt?.stopCam()
-
-                                vt = null
-                                val intent = Intent(this@MainActivity, VideoActivity::class.java)
-                                intent.putExtra("imgPath", outPath)
-                                intent.putExtra("mode", "preview")
-                                startActivity(intent)
-                                myCameras?.get(openedCamera)?.openCamera()
-                                true
-                            } else false
-                        }
-                        else -> false
-                    }
-
-                }
-            }*/
         }
 
         fun turnOnFlashlight(cameraManager: CameraManager) {
@@ -904,6 +999,7 @@ class MainActivity : AppCompatActivity() {
                             val captureRequestBuilder = mCameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
                             captureRequestBuilder?.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
                             captureRequestBuilder?.set(CaptureRequest.LENS_FOCUS_DISTANCE, desiredFocusDistance)
+                            captureRequestBuilder?.set(CaptureRequest.JPEG_ORIENTATION, getOrientation())
                             captureRequestBuilder?.addTarget(surface)
                             captureRequestBuilder?.build()
 
@@ -998,16 +1094,12 @@ class MainActivity : AppCompatActivity() {
                         //zoom
                 val surfaces = ArrayList<Surface>()
                 surfaces.add(surface)
+                builder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation())
                 builder.addTarget(surface)
                 if (mImageReader!=null){
                     surfaces.add(mImageReader!!.surface)
                     //builder.addTarget(mImageReader!!.surface)
                 }
-                /*if (vt!=null&&vt?.mrec!=null) {
-                    val recorderSurface = vt?.mrec!!.surface
-                    surfaces.add(recorderSurface)
-                    builder.addTarget(recorderSurface)
-                }*/
                             mCameraDevice!!.createCaptureSession(surfaces,
                             object : CameraCaptureSession.StateCallback() {
                                 override fun onConfigured(session: CameraCaptureSession) {
@@ -1036,18 +1128,8 @@ class MainActivity : AppCompatActivity() {
 
         fun makePhoto() {
             try {
-                //получаем необходимую ориентацию
-                val display = (ctx.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
-                val rotation = display.rotation
-                val isFrontCamera = characteristics?.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
-
-                var orientation = 0
-                when (rotation) {
-                    Surface.ROTATION_0 -> orientation = if (isFrontCamera) 270 else 90
-                    Surface.ROTATION_90 -> orientation = 0
-                    Surface.ROTATION_180 -> orientation = if (isFrontCamera) 90 else 270
-                    Surface.ROTATION_270 -> orientation = 180
-                }
+                if (mCameraDevice==null) return
+                val orientation = getOrientation()
 
                 // This is the CaptureRequest.Builder that we use to take a picture.
                 val captureBuilder =
@@ -1070,33 +1152,25 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        private fun startRecording() {
-            //if (recorderSurface==null) return
-            try {
-                println("staaaaaaart")
-                mediaRecorder?.start()
-                isRecording = true
-            } catch (e: Exception) {
-                Log.e("Camera2", "Failed to start recording", e)
-            }
-        }
+        private fun getOrientation(): Int{
+            //получаем необходимую ориентацию
+            val display = (ctx.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+            var rotation = display.rotation
+            val isFrontCamera = characteristics?.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
+            val sensorOrnt = characteristics?.get(CameraCharacteristics.SENSOR_ORIENTATION)
+            if (sensorOrnt != null) {
+                //userViewModel.addLog(Date().toString(), "sensorOrnt - $sensorOrnt | rotation - $rotation")
+                if (abs(sensorOrnt/90-rotation)<=2) rotation++
+            }else userViewModel.addLog(Date().toString(), "sensorOrnt null")
 
-        private fun stopRecording() {
-            try {
-                println("stooooooop")
-                if (isRecording) {
-                    mediaRecorder?.stop()
-                    mediaRecorder?.reset()
-                    mediaRecorder?.release()
-                    isRecording = false
-                    val intent = Intent(this@MainActivity, VideoActivity::class.java)
-                    intent.putExtra("imgPath", videoFile?.absolutePath)
-                    intent.putExtra("mode", "preview")
-                    startActivity(intent)
-                }
-            } catch (e: Exception) {
-                Log.e("Camera2", "Failed to stop recording", e)
+            var orientation = 0
+            when (rotation) {
+                Surface.ROTATION_0 -> orientation = if (isFrontCamera) 270 else 90
+                Surface.ROTATION_90 -> orientation = 0
+                Surface.ROTATION_180 -> orientation = if (isFrontCamera) 90 else 270
+                Surface.ROTATION_270 -> orientation = 180
             }
+            return orientation
         }
 
         private val mOnImageAvailableListener: OnImageAvailableListener =
@@ -1156,64 +1230,58 @@ private class ImageSaver internal constructor(image: Image, file: File, mask: Bi
     private val mImage: Image = image
     private val ctx: Context = ctx
     override fun run() {
-        val buffer: ByteBuffer = mImage.planes[0].buffer
+        /*val buffer: ByteBuffer = mImage.planes[0].buffer
         val bytes = ByteArray(buffer.remaining())
-        buffer.get(bytes)
+        buffer.get(bytes)*/
+        val bmpOrnt = processImage(mImage) ?: return
         var output: FileOutputStream? = null
         try {
             val folder = File(ctx.getExternalFilesDir(null), "mirrorImages")
             if(!folder.exists()) folder.mkdir()
-            var newName = "1.png"
-            var index = 0
-            if (folder.exists()) {
-                for (file in folder.listFiles()) {
-                    if (file.name.split(".")[0].toIntOrNull()!=null)
-                        if(file.name.split(".")[0].toIntOrNull()!!>index)
-                            index = file.name.split(".")[0].toInt()
-                }
-            }
-            if (index>0) {
-                index++
-                newName = "$index.png"
-            }
+            var newName = "${Date()}.jpg"
             mFile = File(ctx.getExternalFilesDir(null), "mirrorImages/$newName")
             output = FileOutputStream(mFile)
             var rbytes : ByteArray? = null
             if(mask!=null) {
-                val img = combineImg(bytes, mask, isFlipped )
+                //val img = combineImg(bytes, mask, isFlipped )
+                val img = combineImg(bmpOrnt, mask, isFlipped )
                 val stream = ByteArrayOutputStream()
-                img?.compress(Bitmap.CompressFormat.PNG, 90, stream)
+                img?.compress(Bitmap.CompressFormat.JPEG, 90, stream)
                 rbytes = stream.toByteArray()
             }else{
                 if (isFlipped){
-                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    val bitmap = bmpOrnt//BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 
                     val matrix = Matrix()
                     matrix.setScale(-1f, 1f) // Отзеркаливание по горизонтали
 
-                    matrix.postTranslate(bitmap.width.toFloat(), 0f) // Сдвиг на ширину изображения
+                    //matrix.postTranslate(bitmap.width.toFloat(), 0f) // Сдвиг на ширину изображения
 
                     val flippedBitmap =
-                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                        Bitmap.createBitmap(bitmap!!, 0, 0, bitmap.width, bitmap.height, matrix, true)
                     val stream = ByteArrayOutputStream()
-                    flippedBitmap.compress(Bitmap.CompressFormat.PNG, 90, stream)
+                    flippedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
                     rbytes = stream.toByteArray()
-                }else
-                    rbytes = bytes
+                }else {
+                    val stream = ByteArrayOutputStream()
+                    bmpOrnt!!.compress(Bitmap.CompressFormat.JPEG, 90, stream)
+                    rbytes = stream.toByteArray()
+                    //rbytes = bytes
+                }
             }
             output.write(rbytes)
         } catch (e: IOException) {
             println("imgsaveErr"+e.localizedMessage)
         } finally {
-            mImage.close()
             if (null != output) {
                 try {
-                    output.close()
                     val intent = Intent(ctx, mirror.hand.makeup.shaving.best.zoom.pocket.selfie.FullscreenActivity::class.java)
                     intent.putExtra("imgPath", mFile.absolutePath)
                     intent.putExtra("mode", "preview")
                     if (mFile.exists()) viewModel.lastImagePath = mFile.absolutePath
                     ctx.startActivity(intent)
+                    mImage.close()
+                    output.close()
                 } catch (e: IOException) {
                     println("saveERR"+e.localizedMessage)
                 }
@@ -1221,8 +1289,33 @@ private class ImageSaver internal constructor(image: Image, file: File, mask: Bi
         }
     }
 
-    fun combineImg(back : ByteArray, front: Bitmap, isFlipped: Boolean) : Bitmap?{
-        var myBitmap = BitmapFactory.decodeByteArray(back, 0, back.size, null)
+    private fun processImage(image: Image) :Bitmap? {
+        val buffer = image.planes[0].buffer
+        val bytes = ByteArray(buffer.remaining())
+        buffer.get(bytes)
+
+        // Get the image's orientation from the ExifInterface.
+        val exif = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            ExifInterface(bytes.inputStream())
+        } else {
+            return null
+        }
+        viewModel.addLog(Date().toString(), exif.toString())
+        val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED)
+
+        // Rotate the image according to its orientation.
+        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        val matrix = Matrix()
+        when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+            ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+        }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
+
+    fun combineImg(back : Bitmap, front: Bitmap, isFlipped: Boolean) : Bitmap?{
+        var myBitmap = back//BitmapFactory.decodeByteArray(back, 0, back.size, null)
         if (isFlipped){
             val matrix = Matrix()
             matrix.setScale(-1f, 1f) // Отзеркаливание по горизонтали
