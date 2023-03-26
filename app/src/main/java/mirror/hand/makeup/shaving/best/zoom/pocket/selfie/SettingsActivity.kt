@@ -224,7 +224,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         rbg2?.setOnCheckedChangeListener{group, checkedID->
             when(checkedID){
                 R.id.radioButton10->{
-                    answer = "Камера не работа"
+                    answer = "Камера не работает"
                 }
                 R.id.radioButton11->{
                     answer = "Плохое качество изображения"
@@ -563,8 +563,8 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                         .setPurchaseToken(purchase.purchaseToken)
                         .build()
                     billingClient!!.acknowledgePurchase(acknowledgePurchaseParams, ackPurchase)
-                    viewModel.addLog(Date().toString(), "purchaseAcknowleged")
                 } else {
+                    consumeAsync(purchase.purchaseToken)
                     // Grant entitlement to the user on item purchase
                     // restart activity
                     //if (viewModel.subscriptionType=="off") {
@@ -583,6 +583,24 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
             }
         }
     }
+
+    private fun consumeAsync(purchaseToken: String) {
+        val consumeParams =
+            ConsumeParams.newBuilder()
+                .setPurchaseToken(purchaseToken)
+                .build()
+        billingClient?.consumeAsync(consumeParams) { billingResult, outToken ->
+            when (billingResult.responseCode) {
+                BillingClient.BillingResponseCode.OK -> {
+                    Log.d("lll", "consumeAsync successful")
+                }
+                else -> {
+                    Log.e("lll", "consumeAsync error: ${billingResult.debugMessage}")
+                }
+            }
+        }
+    }
+
 
     var ackPurchase = AcknowledgePurchaseResponseListener { billingResult ->
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {

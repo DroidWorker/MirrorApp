@@ -7,18 +7,38 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.viewpager.widget.ViewPager
+import com.android.billingclient.api.*
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.OnboardingViewAdapter
 import com.tbuonomo.viewpagerdotsindicator.SpringDotsIndicator
 
-class OnboardingActivity : AppCompatActivity() {
+class OnboardingActivity : AppCompatActivity(), PurchasesUpdatedListener {
     private val userViewModel by viewModels<MainViewModel>()
+
+    lateinit var billingClient : BillingClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_onboarding)
+
+        billingClient = BillingClient.newBuilder(this)
+            .enablePendingPurchases()
+            .setListener(this)
+            .build()
+        billingClient.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(billingResult: BillingResult) {
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+
+                }
+            }
+
+            override fun onBillingServiceDisconnected() {
+                Toast.makeText(applicationContext, "server disconnected", Toast.LENGTH_SHORT).show()
+            }
+        })
 
         val later = findViewById<TextView>(R.id.onboardingLater)
         val recover = findViewById<TextView>(R.id.onboardingRecover)
@@ -83,6 +103,24 @@ class OnboardingActivity : AppCompatActivity() {
             startActivity(pollIntent)
         })
 
+        recover.setOnClickListener{
+            val skuList = listOf("mons67r", "year201r")
+            val params = SkuDetailsParams.newBuilder()
+                .setType(BillingClient.SkuType.SUBS)
+                .setSkusList(skuList)
+                .build()
+
+            billingClient.querySkuDetailsAsync(params) { billingResult, skuDetailsList ->
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
+                    val subscription = skuDetailsList[0]
+                    val flowParams = BillingFlowParams.newBuilder()
+                        .setSkuDetails(subscription)
+                        .build()
+                    billingClient.launchBillingFlow(this@OnboardingActivity, flowParams)
+                }
+            }
+        }
+
         close.setOnClickListener{
             val payIntent = Intent(this@OnboardingActivity, PayActivity::class.java)
             finish()
@@ -99,5 +137,26 @@ class OnboardingActivity : AppCompatActivity() {
         val intent = Intent(this@OnboardingActivity, LongTextActivity::class.java)
         intent.putExtra("type", "terms")
         startActivity(intent)
+    }
+
+    override fun onPurchasesUpdated(p0: BillingResult, p1: MutableList<Purchase>?) {
+        if (p0?.responseCode == BillingClient.BillingResponseCode.OK && p1 != null) {
+            for (purchase in p1) {
+                if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+                    purchase.skus == arrayListOf("mons67r", "year201r")) {
+                    // продлеваем подписку
+                    val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+                        .setPurchaseToken(purchase.purchaseToken)
+                        .build()
+                    billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
+                        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                            userViewModel.subscriptionType = "year"
+                            userViewModel.isADActive = false
+                            finish()
+                        }
+                    }
+                }
+            }
+        }
     }
 }

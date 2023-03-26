@@ -19,11 +19,11 @@
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/seecbar_style.xml" value="0.166" />
         <entry key="..\:/desktop/kwork/app/src/main/res/drawable/seekbarstyle.xml" value="0.166" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_camera_access.xml" value="0.11302083333333333" />
-        <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_fullscreen.xml" value="0.25416666666666665" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_fullscreen.xml" value="0.176" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_gallery.xml" value="0.25416666666666665" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_info360.xml" value="0.11302083333333333" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_long_text.xml" value="0.11302083333333333" />
-        <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_main.xml" value="0.152" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_main.xml" value="0.264" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_onboarding.xml" value="0.25416666666666665" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_pay.xml" value="0.2" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/activity_poll.xml" value="0.176" />
@@ -40,6 +40,7 @@
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/mask_preview_item.xml" value="0.11302083333333333" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/notification.xml" value="0.4" />
         <entry key="..\:/desktop/kwork/app/src/main/res/layout/onboarding_item.xml" value="0.11302083333333333" />
+        <entry key="..\:/desktop/kwork/app/src/main/res/layout/photo_image_view.xml" value="0.1" />
         <entry key="..\:/desktop/kwork/app/src/main/res/menu/menu_galery.xml" value="0.25416666666666665" />
         <entry key="..\:/desktop/kwork/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.12" />
         <entry key="..\:/desktop/kwork/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.12" />

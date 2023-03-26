@@ -50,6 +50,13 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
             editor.apply()
         }
 
+    var isFeedbackActive : Boolean
+        get() = sharedPreference.getBoolean("isFeedbackActive", true)
+        set(value){
+            editor.putBoolean("isFeedbackActive", value)
+            editor.apply()
+        }
+
     var subscriptionType : String
         get() = sharedPreference.getString("subscriptionType", "off")?: "off"
         set(value){
@@ -77,6 +84,13 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
         editor.putInt("adBannerTimer", value)
         editor.apply()
     }
+
+    var rateRequestTimer : Int
+        get() = sharedPreference.getInt("rateRequestTimer", 3)
+        set(value){
+            editor.putInt("rateRequestTimer", value)
+            editor.apply()
+        }
 
     var splashDelay : Int
         get() = sharedPreference.getInt("splashDelay", 3000)

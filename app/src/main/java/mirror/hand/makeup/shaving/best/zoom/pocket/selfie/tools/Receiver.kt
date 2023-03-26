@@ -12,10 +12,10 @@ class NotificationReceiver : BroadcastReceiver() {
             val notificationId = intent.getIntExtra("notification_id", 0)
             val notificationManager = NotificationManagerCompat.from(context)
             notificationManager.cancel(notificationId)
-            val sharedPreference = context.getSharedPreferences("appSettings", Context.MODE_PRIVATE)
+            /*val sharedPreference = context.getSharedPreferences("appSettings", Context.MODE_PRIVATE)
             var editor = sharedPreference.edit()
             editor.putBoolean("isNotificationActive", false)
-            editor.apply()
+            editor.apply()*/
         }
     }
 }

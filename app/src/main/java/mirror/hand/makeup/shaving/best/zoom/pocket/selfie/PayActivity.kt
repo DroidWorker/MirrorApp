@@ -174,7 +174,6 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
             ) { billingResult, skuDetailsList ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     if (skuDetailsList != null && skuDetailsList.size > 0) {
-                        println("mkmkmkkmkmk"+skuDetailsList.size+"|||"+skuDetailsList)
                         val flowParams = BillingFlowParams.newBuilder()
                             .setSkuDetails(skuDetailsList[0])
                             .build()
@@ -269,8 +268,8 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     val skuList = ArrayList<String>()
-                    if (tarif=="week")skuList.add("mons67r")
-                    else skuList.add("year201r")
+                    skuList.add("mons67r")
+                    skuList.add("year201r")
 
                     val params = SkuDetailsParams.newBuilder()
                         .setSkusList(skuList)

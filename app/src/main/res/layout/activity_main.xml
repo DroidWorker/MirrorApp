@@ -43,7 +43,9 @@
             android:id="@+id/clear"
             android:layout_width="wrap_content"
             android:layout_height="30dp"
+            android:layout_marginTop="9dp"
             android:layout_marginEnd="16dp"
+            android:layout_marginBottom="9dp"
             android:background="@drawable/rounded_blck"
             android:onClick="onsurvayClickOk"
             android:paddingLeft="4dp"
@@ -70,7 +72,7 @@
             android:onClick="onSurvayClickNo"
             android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/adViewMain"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/admob_close_button_white_circle_black_cross" />
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -12,24 +12,33 @@ import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
 import com.google.android.material.color.utilities.Score.score
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.PhotoPagerAdapter
 import java.io.ByteArrayOutputStream
 import java.io.File
 
 
 class FullscreenActivity : AppCompatActivity() {
+    private val viewModel by viewModels<MainViewModel>()
+
     var saveImg = false
     lateinit var mode : String
     private var path: String?  = null
     lateinit var ctx : Context
+    lateinit var imgs : Map<String, Bitmap>
+    lateinit var adapter : PhotoPagerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.layout.activity_fullscreen)
+        setContentView(R.layout.activity_fullscreen)
         ctx = this
         path = intent.getStringExtra("imgPath")
         mode = intent.getStringExtra("mode") ?: "default"
@@ -39,13 +48,34 @@ class FullscreenActivity : AppCompatActivity() {
             this
         ) { }
         val adRequest = AdRequest.Builder().build()
-        adView.loadAd(adRequest)
+        if(viewModel.isADActive) adView.loadAd(adRequest)
+        else adView.visibility = View.GONE
 
-        val imageView = findViewById<ImageView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.fullscreenImage)
-        imageView.setImageBitmap(BitmapFactory.decodeFile(path))
 
         if (mode=="preview") {
             findViewById<ImageButton>(R.id.imageButton3).visibility = View.VISIBLE
+            adapter = PhotoPagerAdapter()
+            adapter.setPhotos(listOf(path!!))
+            val viewPager = findViewById<ViewPager2>(R.id.fullscreenImage)
+            viewPager.adapter = adapter
+        }else {
+            imgs = getImagesFromFolder()
+            val tmplist: MutableList<String> = imgs.keys.toMutableList()
+            val index = tmplist.indexOf(path)
+            if (index != -1) {
+                tmplist.removeAt(index)
+                tmplist.add(0, path!!)
+            }
+            adapter = PhotoPagerAdapter()
+            adapter.setPhotos(tmplist)
+            val viewPager = findViewById<ViewPager2>(R.id.fullscreenImage)
+            viewPager.adapter = adapter
+            viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    super.onPageSelected(position)
+                    adapter.currentImageIndex = position
+                }
+            })
         }
     }
 
@@ -58,7 +88,7 @@ class FullscreenActivity : AppCompatActivity() {
 
     fun onSaveClick(v: View){
         if(mode=="default"){//default mode save image to phone gallery
-            val file = File(path)
+            val file = File(adapter.getCurrentImage())
             MediaScannerConnection.scanFile(
                 this,
                 arrayOf(file.absolutePath),
@@ -83,7 +113,7 @@ class FullscreenActivity : AppCompatActivity() {
     }
 
     fun onShareClick(v: View){
-        shareImage(BitmapFactory.decodeFile(path))
+        shareImage(BitmapFactory.decodeFile(if (mode=="default")adapter.getCurrentImage() else path))
     }
 
     private fun deleteFileByAbsolutePath(filePath: String) {
@@ -111,4 +141,16 @@ class FullscreenActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(shareIntent, "send"))
     }
 
+    fun getImagesFromFolder(): Map<String, Bitmap> {
+        val folder = File(applicationContext.getExternalFilesDir(null), "mirrorImages")
+        val images = mutableMapOf<String, Bitmap>()
+        if (folder.exists()) {
+            for (file in folder.listFiles()) {
+                try {
+                    images[file.absolutePath] = BitmapFactory.decodeFile(file.absolutePath)
+                }catch (ex: Exception){}
+            }
+        }
+        return images
+    }
 }

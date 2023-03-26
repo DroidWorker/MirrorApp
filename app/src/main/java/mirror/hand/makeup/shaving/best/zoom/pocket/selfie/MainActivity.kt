@@ -3,6 +3,9 @@ package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 import android.Manifest
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -32,6 +35,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
 import androidx.lifecycle.ViewModelProvider
@@ -86,6 +90,9 @@ class MainActivity : AppCompatActivity() {
     var flipEnabled = false
     var isMirrorSelected = true
 
+    private val timerAdBanner : Timer = Timer()
+    private val timerRateRequest : Timer = Timer()
+
     lateinit var mImageView: TextureView
     lateinit var mSurfaceView: SurfaceView
     lateinit var surfaceforVT: Surface
@@ -103,9 +110,13 @@ class MainActivity : AppCompatActivity() {
     var currentMask = R.drawable.transparent_retro_borders
 
     var dialogStep = 1
+    var currentSessionNotificationActive = true
+    var isAppStarted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        isAppStarted = true
+        println("isAppStarted = true create")
         ViewModelProvider(this)[MainViewModel::class.java]
         ctx = this
         val splashIntent = Intent(this@MainActivity, SplashActivity::class.java)
@@ -226,14 +237,119 @@ class MainActivity : AppCompatActivity() {
             omaskView.setImageResource(mascArray[currentIndex])
             currentMask = mascArray[currentIndex]
         })
+       madapter.onClick = {
+           if(it%mascArray.size>currentIndex) cp.smoothScrollToPosition(it+2)
+           else cp.smoothScrollToPosition(it-2)
+       }
 
         //adTimer
-        if (!Timer.isStarted)Timer.startTimer((userViewModel.adBannerTimer*60000).toLong())
-        Timer.listener = {
+        if (!timerAdBanner.isStarted&&userViewModel.isFeedbackActive){
+            timerAdBanner.startTimer((userViewModel.adBannerTimer*60000).toLong())
+        }
+        timerAdBanner.listener = {
             findViewById<AdView>(R.id.adViewMain).visibility = View.GONE
             findViewById<TextView>(R.id.textView12).visibility = View.VISIBLE
             findViewById<MaterialButton>(R.id.clear).visibility = View.VISIBLE
             findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.VISIBLE
+        }
+
+        if (!timerRateRequest.isStarted&&userViewModel.isFeedbackActive)timerRateRequest.startTimer((userViewModel.rateRequestTimer*60000).toLong())
+        timerRateRequest.listener = {
+
+            var rate = 0
+            val bottomSheetDialog = SmoothBottomSheetDialog(this)
+            bottomSheetDialog.setContentView(R.layout.bottom_sheet_dialog_rate)
+
+            val step1 = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.bsdrateStep1)
+            val stepOK = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.bsdrateStepOK)
+            val stepBAD = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.bsdrateStepBAD)
+
+            //if like
+            val buttonOK = bottomSheetDialog.findViewById<Button>(R.id.buttonOK)
+            //if hate
+            val buttonBAD = bottomSheetDialog.findViewById<Button>(R.id.buttonBAD)
+
+            buttonOK?.setOnClickListener {
+                rate=-1
+                step1?.visibility = View.GONE
+                stepOK?.visibility = View.VISIBLE
+
+                val star1 = bottomSheetDialog.findViewById<ImageView>(R.id.star1)
+                val star2 = bottomSheetDialog.findViewById<ImageView>(R.id.star2)
+                val star3 = bottomSheetDialog.findViewById<ImageView>(R.id.star3)
+                val star4 = bottomSheetDialog.findViewById<ImageView>(R.id.star4)
+                val star5 = bottomSheetDialog.findViewById<ImageView>(R.id.star5)
+                val buttonRate = bottomSheetDialog.findViewById<Button>(R.id.bsdrateRate)
+
+                star1?.setOnClickListener{
+                    rate = 1
+                    selectStar(star1, star2, star3, star4, star5, buttonRate, 1)
+                }
+                star2?.setOnClickListener{
+                    rate = 2
+                    selectStar(star1, star2, star3, star4, star5, buttonRate, 2)
+                }
+                star3?.setOnClickListener{
+                    rate = 3
+                    selectStar(star1, star2, star3, star4, star5, buttonRate, 3)
+                }
+                star4?.setOnClickListener{
+                    rate = 4
+                    selectStar(star1, star2, star3, star4, star5, buttonRate, 4)
+                }
+                star5?.setOnClickListener{
+                    rate = 5
+                    selectStar(star1, star2, star3, star4, star5, buttonRate, 5)
+                }
+
+                buttonRate?.setOnClickListener{
+                    userViewModel.isFeedbackActive = false
+                    timerRateRequest.stop()
+                    if (rate in 1..3){
+                        bottomSheetDialog.hide()
+                        return@setOnClickListener
+                    }
+                    else if(rate>3){
+                        try {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                        } catch (e: ActivityNotFoundException) {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                        }
+                        return@setOnClickListener
+                    }
+                }
+            }
+
+            buttonBAD?.setOnClickListener{
+                step1?.visibility = View.GONE
+                stepBAD?.visibility = View.VISIBLE
+
+                val etText = bottomSheetDialog.findViewById<EditText>(R.id.BSDRateBadEditText)
+                val buttonSendText = bottomSheetDialog.findViewById<Button>(R.id.BSDRateBadSend)
+
+                buttonSendText?.setOnClickListener{
+                    userViewModel.isFeedbackActive = false
+                    timerRateRequest.stop()
+                    if (etText?.text?.length!! >3){
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:")
+                            putExtra(Intent.EXTRA_EMAIL, arrayOf("smarteasyapps17@gmail.com"))
+                            putExtra(Intent.EXTRA_SUBJECT, "mirrorAPP")
+                            putExtra(Intent.EXTRA_TEXT, etText!!.text)
+                        }
+                        if (intent.resolveActivity(this.packageManager) != null) {
+                            startActivity(Intent.createChooser(intent, "Send mail..."))
+                            bottomSheetDialog.hide()
+                        } else {
+                            Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+            bottomSheetDialog.show()
+            if (!timerRateRequest.isStarted&&userViewModel.isFeedbackActive){
+                timerRateRequest.startTimer((userViewModel.rateRequestTimer*60000).toLong())
+            }
         }
 
         // Создаем GestureDetector
@@ -370,6 +486,76 @@ class MainActivity : AppCompatActivity() {
             startActivity(caIntent)
         }
         else {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationId = 257894
+            val activeNotifications = notificationManager.activeNotifications
+            val notificationAlreadyShown = activeNotifications.any { it.id == notificationId }
+            if (isAppStarted) {
+                // приложение только что запущено
+            } else {
+                currentSessionNotificationActive = true
+                println("lplplpl"+notificationAlreadyShown+" "+userViewModel.isNotificationActive+" "+currentSessionNotificationActive)
+                // приложение было восстановлено из background
+                if (!notificationAlreadyShown && userViewModel.isNotificationActive && currentSessionNotificationActive) {
+                    currentSessionNotificationActive = false
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        val channel = NotificationChannel(
+                            "appMirrorChannel",
+                            "AppMirror",
+                            NotificationManager.IMPORTANCE_HIGH
+                        )
+                        notificationManager.createNotificationChannel(channel)
+                    }
+                    val intent = Intent(this, MainActivity::class.java)
+                    val pendingIntent =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getActivity(
+                            this,
+                            0,
+                            intent,
+                            PendingIntent.FLAG_MUTABLE
+                        )
+                        else PendingIntent.getActivity(
+                            this,
+                            0,
+                            intent,
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                        )
+                    val intentClose = Intent(this, NotificationReceiver::class.java).apply {
+                        action =
+                            "mirror.hand.makeup.shaving.best.zoom.pocket.selfie.notification.ACTION_CLOSE"
+                        putExtra("notification_id", notificationId)
+                    }
+                    val pendingIntentClose =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getBroadcast(
+                            this,
+                            0,
+                            intentClose,
+                            PendingIntent.FLAG_MUTABLE
+                        )
+                        else PendingIntent.getActivity(
+                            this,
+                            0,
+                            intentClose,
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                        )
+
+                    val remoteViews = RemoteViews(packageName, R.layout.notification)
+                    remoteViews.setTextViewText(R.id.notText, "Нажмите, чтобы открыть")
+                    remoteViews.setOnClickPendingIntent(R.id.root, pendingIntent)
+                    remoteViews.setOnClickPendingIntent(R.id.imageButton222, pendingIntentClose)
+                    val builder = NotificationCompat.Builder(this, "appMirrorChannel")
+                        .setSmallIcon(R.drawable.app_icon)
+                        .setContentTitle("BeauttyMirror")
+                        .setCustomContentView(remoteViews)
+                        .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setContentIntent(pendingIntent)
+                        .setAutoCancel(false) // флаг, который делает уведомление невозможным для закрытия свайпом
+                        .setOngoing(true) // флаг, который делает уведомление невозможным для закрытия пользователем
+
+                    notificationManager.notify(notificationId, builder.build())
+                }
+            }
             //overridePendingTransition(R.anim.diagonal,R.anim.alpha)
             MobileAds.initialize(
                 this
@@ -380,7 +566,8 @@ class MainActivity : AppCompatActivity() {
             }
             val mAdView :AdView = findViewById(R.id.adViewMain)
             val adRequest = AdRequest.Builder().build()
-            mAdView.loadAd(adRequest)
+            if(userViewModel.isADActive) mAdView.loadAd(adRequest)
+            else mAdView.visibility = View.GONE
             isCameraReady = true
             if (!isCamStarted) {
                 startCam()
@@ -402,10 +589,96 @@ class MainActivity : AppCompatActivity() {
         stopBackgroundThread()
     }
 
+    override fun onStop() {
+        super.onStop()
+        isAppStarted = false
+        println("isAppStarted = false stop")
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        isAppStarted = true
+        println("isAppStarted = true restart")
+    }
+
     /*override fun onDestroy() {
         super.onDestroy()
         //myCameras?.get(openedCamera)?.closeCamera()
     }*/
+
+    private fun selectStar(iv1: ImageView?, iv2: ImageView?,iv3: ImageView?,iv4: ImageView?,iv5: ImageView?, b: Button?, r: Int){
+        if (r<=0) return
+        else{
+            iv1?.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.star
+                ))
+            iv2?.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.star
+                ))
+            iv3?.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.star
+                ))
+            iv4?.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.star
+                ))
+            iv5?.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.star
+                ))
+        }
+        b?.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_white)
+        if(r>3) b?.text = getString(R.string.rate_on_pm)
+        else b?.text = getString(R.string.rate)
+        if (r>0) {
+            iv1?.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.starfilles
+                )
+            )
+        } else return
+        if (r>1) {
+            iv2?.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.starfilles
+                )
+            )
+        } else return
+        if (r>2) {
+            iv3?.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.starfilles
+                )
+            )
+        } else return
+        if (r>3) {
+            iv4?.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.starfilles
+                )
+            )
+        } else return
+        if (r>4) {
+            iv5?.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this@MainActivity,
+                    R.drawable.starfilles
+                )
+            )
+        } else return
+    }
 
     private fun startBackgroundThread() {
         mBackgroundThread = HandlerThread("CameraBackground")
@@ -470,6 +743,8 @@ class MainActivity : AppCompatActivity() {
             findViewById<Button>(R.id.clear).text = resources.getString(R.string.okey)
         }
         else if(dialogStep==2){
+            userViewModel.isFeedbackActive = false
+            timerAdBanner.stop()
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
             } catch (e: ActivityNotFoundException) {
@@ -490,6 +765,8 @@ class MainActivity : AppCompatActivity() {
 
             send?.setOnClickListener{
                 if (text?.text!!.length>2){
+                    userViewModel.isFeedbackActive = false
+                    timerAdBanner.stop()
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse("mailto:")
                         putExtra(Intent.EXTRA_EMAIL, arrayOf("smarteasyapps17@gmail.com"))
@@ -523,7 +800,11 @@ class MainActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.textView12).visibility = View.GONE
             findViewById<MaterialButton>(R.id.clear).visibility = View.GONE
             findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.GONE
-            Timer.startTimer((userViewModel.adBannerTimer*60000).toLong())
+            dialogStep = 1
+            findViewById<TextView>(R.id.textView12).text = resources.getString(R.string.survey1)
+            findViewById<Button>(R.id.clear).text = resources.getString(R.string.yes)
+            userViewModel.isFeedbackActive = true
+            timerAdBanner.startTimer((userViewModel.adBannerTimer*60000).toLong())
         }
     }
 
@@ -1031,7 +1312,7 @@ class MainActivity : AppCompatActivity() {
             val aspectRatio: Float = sizes[1].width / sizes[1].height.toFloat()
             mImageView.setLayoutParams(FrameLayout.LayoutParams(viewWidth*aspectRatio.toInt(), viewHeight*aspectRatio.toInt()))
             texture?.setDefaultBufferSize(viewHeight*aspectRatio.toInt(),viewWidth*aspectRatio.toInt())
-            mImageReader = ImageReader.newInstance(sizes[1].height,sizes[1].width, ImageFormat.JPEG,1)
+            mImageReader = ImageReader.newInstance(viewHeight*aspectRatio.toInt(),viewWidth*aspectRatio.toInt(), ImageFormat.JPEG,1)
             mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener, null)
             val surface = Surface(texture)
             try {
@@ -1300,7 +1581,6 @@ private class ImageSaver internal constructor(image: Image, file: File, mask: Bi
         } else {
             return null
         }
-        viewModel.addLog(Date().toString(), exif.toString())
         val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED)
 
         // Rotate the image according to its orientation.

@@ -13,6 +13,8 @@ class MascsAdapter(
     private val masks: ArrayList<Int>
 ) : RecyclerView.Adapter<MascsAdapter.DataViewHolder>() {
 
+    var onClick: ((Int) -> Unit)? = null
+
     class DataViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(c: Context, m: Int) {
             itemView.findViewById<ImageView>(R.id.maskPreviewItemPhoto).apply {
@@ -32,5 +34,8 @@ class MascsAdapter(
         run {
             val pos = position % masks.size
             holder.bind(ctx, masks[pos])
+            holder.itemView.setOnClickListener{
+                onClick?.invoke(position)
+            }
         }
 }

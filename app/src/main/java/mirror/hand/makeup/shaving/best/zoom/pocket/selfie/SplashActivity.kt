@@ -16,11 +16,13 @@ import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import android.widget.RemoteViews
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.SkuType.SUBS
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfig
@@ -50,8 +52,18 @@ class SplashActivity : AppCompatActivity() {
             minimumFetchIntervalInSeconds = 3600
         }
         remoteConfig.setConfigSettingsAsync(configSettings)
-        viewModel.adBannerTimer=(remoteConfig.getLong("adBannerTimer").toInt())
-        viewModel.splashDelay=(remoteConfig.getLong("splashDelay").toInt())
+        remoteConfig.fetchAndActivate()
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val updated = task.result
+                    println("Fetch and activate succeeded")
+                } else {
+                    println("Fetch failed")
+                }
+            }
+        viewModel.adBannerTimer=(remoteConfig.getDouble("adBannerTimer").toInt())
+        viewModel.rateRequestTimer=(remoteConfig.getDouble("rateRequestTimer").toInt())
+        viewModel.splashDelay=(remoteConfig.getDouble("splashDelay").toInt())
 
         //syncronizedGP
         val purchasesUpdatedListener =
@@ -87,7 +99,6 @@ class SplashActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        //start notification
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
 // уникальный идентификатор уведомления
@@ -141,6 +152,7 @@ class SplashActivity : AppCompatActivity() {
 
 // Отображаем уведомление
             notificationManager.notify(notificationId, builder.build())
+            notificationManager.cancel(notificationId)
         }
         super.onDestroy()
     }
