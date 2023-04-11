@@ -11,11 +11,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.*
-import android.hardware.Camera
 import android.hardware.camera2.*
 import android.hardware.camera2.CameraCaptureSession.CaptureCallback
-import android.hardware.camera2.CaptureRequest.LENS_FOCUS_DISTANCE
-import android.hardware.camera2.CaptureResult.LENS_FOCUS_DISTANCE
 import android.media.*
 import android.media.ImageReader.OnImageAvailableListener
 import android.net.Uri
@@ -42,6 +39,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.daasuu.gpuv.composer.GPUMp4Composer
+import com.daasuu.gpuv.egl.filter.GlWatermarkFilter
+import com.github.ybq.android.spinkit.SpinKitView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
@@ -55,12 +55,9 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.lang.Math.abs
-import java.nio.ByteBuffer
-import java.time.LocalDateTime
+import java.lang.Math.max
 import java.time.LocalTime
-import java.time.ZonedDateTime
 import java.util.*
-import kotlin.collections.RandomAccess
 
 
 class MainActivity : AppCompatActivity() {
@@ -105,18 +102,19 @@ class MainActivity : AppCompatActivity() {
     lateinit var maskHidden : ImageButton
     lateinit var mask3 : ImageButton
     lateinit var mask4 : ImageButton
+    lateinit var progressBar : SpinKitView
+
+    var currentProgressValue = 0f
 
     var currentIndex = 9
     var currentMask = R.drawable.transparent_retro_borders
 
     var dialogStep = 1
     var currentSessionNotificationActive = true
-    var isAppStarted = false
+    var isAppStarted = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        isAppStarted = true
-        println("isAppStarted = true create")
         ViewModelProvider(this)[MainViewModel::class.java]
         ctx = this
         val splashIntent = Intent(this@MainActivity, SplashActivity::class.java)
@@ -132,6 +130,7 @@ class MainActivity : AppCompatActivity() {
         maskHidden = findViewById(R.id.maskHidden)
         mask3 = findViewById(R.id.mask3)
         mask4 = findViewById(R.id.mask4)
+        progressBar = findViewById<SpinKitView>(R.id.processProgressBar)
         val cp = findViewById<RecyclerView>(R.id.carousel)
         val mascArray : List<Int>
         val mascPreviewArray: ArrayList<Int>
@@ -245,6 +244,7 @@ class MainActivity : AppCompatActivity() {
         //adTimer
         if (!timerAdBanner.isStarted&&userViewModel.isFeedbackActive){
             timerAdBanner.startTimer((userViewModel.adBannerTimer*60000).toLong())
+            println("opopopopopo"+userViewModel.adBannerTimer)
         }
         timerAdBanner.listener = {
             findViewById<AdView>(R.id.adViewMain).visibility = View.GONE
@@ -312,8 +312,10 @@ class MainActivity : AppCompatActivity() {
                     else if(rate>3){
                         try {
                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                            isAppStarted = false
                         } catch (e: ActivityNotFoundException) {
                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                            isAppStarted = false
                         }
                         return@setOnClickListener
                     }
@@ -339,6 +341,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         if (intent.resolveActivity(this.packageManager) != null) {
                             startActivity(Intent.createChooser(intent, "Send mail..."))
+                            isAppStarted = false
                             bottomSheetDialog.hide()
                         } else {
                             Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
@@ -429,8 +432,6 @@ class MainActivity : AppCompatActivity() {
                         isCamStarted = false
                         isInShot = false
                         stopBackgroundThread()
-                        //val cam : Camera = Camera.open()
-                        //vt?.startRecording()
                         vt = VIdeoTool(ctx, this@MainActivity)
                         val folder = File(ctx.getExternalFilesDir("").toString() + "/videos")
                         folder.mkdirs()
@@ -445,13 +446,93 @@ class MainActivity : AppCompatActivity() {
                         hideShowInterface(false)
                         vt?.destroy()
                         val outPath = vt?.stopCam()
+                        if (currentMask!=R.drawable.transparent_retro_borders) {
+                            progressBar.visibility = View.VISIBLE
+                            val outputVideoPath = outPath?.replace(".mp4", "mask.mp4")
+                            //масштабируем маску
+                            val width = 720
+                            val height = 1280
 
-                        vt = null
-                        val intent = Intent(this@MainActivity, VideoActivity::class.java)
-                        intent.putExtra("imgPath", outPath)
-                        intent.putExtra("mode", "preview")
-                        startActivity(intent)
-                        myCameras?.get(openedCamera)?.openCamera()
+                            // Загружаем изображение в Bitmap
+                            val bitmap = BitmapFactory.decodeResource(applicationContext.resources, currentMask)
+
+                            // Изменяем размер Bitmap
+                            val scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false)
+                            //--------------------------------------------------------------------------------
+                            val f1 = File(outPath)
+                            val f2 = File(outputVideoPath)
+                            if(!f2.exists()) f2.createNewFile()
+                            while (!f1.canWrite()) {
+                                Thread.sleep(500) // приостанавливаем выполнение на 1 секунду
+                            }
+                            while (!f2.canWrite()) {
+                                Thread.sleep(500) // приостанавливаем выполнение на 1 секунду
+                            }
+                            Thread.sleep(500)
+                            var mp4Composer: GPUMp4Composer = GPUMp4Composer(outPath!!, outputVideoPath!!)
+                            .filter(GlWatermarkFilter(scaledBitmap, GlWatermarkFilter.Position.LEFT_TOP))
+                                .listener(object : GPUMp4Composer.Listener{
+                                    override fun onProgress(progress: Double) {
+                                        runOnUiThread {
+                                            println("progress $progress")
+                                            /*val progressAnimator = ValueAnimator.ofFloat(
+                                                currentProgressValue,
+                                                progress.toFloat()
+                                            ).apply {
+                                                duration = 500
+                                                interpolator = LinearInterpolator()
+                                                addUpdateListener {
+                                                    currentProgressValue = it.animatedValue as Float
+                                                    progressBar.progress =
+                                                        (currentProgressValue * 100).toInt()
+                                                    println("animvalue"+currentProgressValue)
+                                                }
+                                            }
+                                            progressAnimator.start()*/
+                                            progressBar.progress = (progress*100).toInt()
+                                        }
+                                    }
+
+
+                                    override fun onCompleted() {
+                                        val previewFile = File(outPath)
+                                        /*File(applicationContext.getExternalFilesDir("")
+                                            .toString() + "/videos/thumb/${previewFile.name.replace(".mp4", "")}.png").renameTo(File(applicationContext.getExternalFilesDir("")
+                                            .toString() + "/videos/thumb/${File(outputVideoPath).name.replace(".mp4", "")}.png"))
+                                        */previewFile.delete()
+                                        runOnUiThread {
+                                            progressBar.visibility = View.INVISIBLE
+                                            vt = null
+                                            val intent =
+                                                Intent(this@MainActivity, VideoActivity::class.java)
+                                            intent.putExtra("imgPath", outputVideoPath)
+                                            intent.putExtra("mode", "preview")
+                                            startActivity(intent)
+                                            isAppStarted = false
+                                            myCameras?.get(openedCamera)?.openCamera()
+                                        }
+                                    }
+
+                                    override fun onCanceled() {
+                                    }
+
+                                    override fun onFailed(exception: java.lang.Exception?) {
+                                        println("exception wwwww"+exception?.localizedMessage)
+                                    }
+
+                                })
+                                .start()
+                        }
+                        else{
+                            vt = null
+                            val intent =
+                                Intent(this@MainActivity, VideoActivity::class.java)
+                            intent.putExtra("imgPath", outPath)
+                            intent.putExtra("mode", "preview")
+                            startActivity(intent)
+                            isAppStarted = false
+                            myCameras?.get(openedCamera)?.openCamera()
+                        }
                     }
                 }
 
@@ -472,31 +553,38 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume(){
         super.onResume()
+        //синхронизируем с галереей
+        if(userViewModel.lastImagePath!="err"&&File(userViewModel.lastImagePath).exists()) {
+            findViewById<ImageView>(R.id.openGalery).setImageURI(Uri.fromFile(File(userViewModel.lastImagePath)))
+        }
         if (!is360Mode)onMirrorClick(findViewById(R.id.buttonMirror))
         else on360Click(findViewById(R.id.button360))
         if (userViewModel.isFirstLaunch && isAppReady){
             userViewModel.isFirstLaunch = false
             val onboardingIntent = Intent(this@MainActivity, OnboardingActivity::class.java)
             startActivity(onboardingIntent)
+            isAppStarted = false
         }else if(ContextCompat.checkSelfPermission(this, CAMERA)==PackageManager.PERMISSION_DENIED&&isAppReady){
             val caIntent = Intent(this@MainActivity, CameraAccessActivity::class.java)
             startActivity(caIntent)
+            isAppStarted = false
         }else if(ContextCompat.checkSelfPermission(this, RECORD_AUDIO)==PackageManager.PERMISSION_DENIED&&isAppReady){
             val caIntent = Intent(this@MainActivity, CameraAccessActivity::class.java)
             startActivity(caIntent)
+            isAppStarted = false
         }
         else {
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val notificationId = 257894
             val activeNotifications = notificationManager.activeNotifications
             val notificationAlreadyShown = activeNotifications.any { it.id == notificationId }
-            if (isAppStarted) {
+            if (!isAppStarted) {
                 // приложение только что запущено
+                isAppStarted = true
             } else {
                 currentSessionNotificationActive = true
-                println("lplplpl"+notificationAlreadyShown+" "+userViewModel.isNotificationActive+" "+currentSessionNotificationActive)
                 // приложение было восстановлено из background
-                if (!notificationAlreadyShown && userViewModel.isNotificationActive && currentSessionNotificationActive) {
+                if (!notificationAlreadyShown && userViewModel.isNotificationActive) {
                     currentSessionNotificationActive = false
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         val channel = NotificationChannel(
@@ -560,10 +648,6 @@ class MainActivity : AppCompatActivity() {
             MobileAds.initialize(
                 this
             ) { }
-            //синхронизируем с галереей
-            if(userViewModel.lastImagePath!="err"&&File(userViewModel.lastImagePath).exists()) {
-                findViewById<ImageView>(R.id.openGalery).setImageURI(Uri.fromFile(File(userViewModel.lastImagePath)))
-            }
             val mAdView :AdView = findViewById(R.id.adViewMain)
             val adRequest = AdRequest.Builder().build()
             if(userViewModel.isADActive) mAdView.loadAd(adRequest)
@@ -587,18 +671,6 @@ class MainActivity : AppCompatActivity() {
         isCamStarted=false
         isInShot = false
         stopBackgroundThread()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        isAppStarted = false
-        println("isAppStarted = false stop")
-    }
-
-    override fun onRestart() {
-        super.onRestart()
-        isAppStarted = true
-        println("isAppStarted = true restart")
     }
 
     /*override fun onDestroy() {
@@ -747,8 +819,10 @@ class MainActivity : AppCompatActivity() {
             timerAdBanner.stop()
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                isAppStarted = false
             } catch (e: ActivityNotFoundException) {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                isAppStarted = false
             }
         }else{
             //feedback
@@ -775,6 +849,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     if (intent.resolveActivity(this.packageManager) != null) {
                         this.startActivity(intent)
+                        isAppStarted = false
                         bottomSheetDialog.hide()
                     } else {
                         Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
@@ -963,6 +1038,7 @@ class MainActivity : AppCompatActivity() {
         if(isInShot) return
         val intent = Intent(this@MainActivity, SettingsActivity::class.java)
         startActivity(intent)
+        isAppStarted = false
     }
 
     fun onMirrorClick(v: View){
@@ -1030,6 +1106,7 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this@MainActivity, Info360Activity::class.java)
             userViewModel.is360FirstLaunch = false
             startActivity(intent)
+            isAppStarted = false
         }
 
         //show videoShotButton
@@ -1073,6 +1150,12 @@ class MainActivity : AppCompatActivity() {
             //seekbarbrightness.layoutParams = LinearLayout.LayoutParams(200, 100)
             bBacklight.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.backlight))
             imageContainer.setPadding(0)
+            mImageView.post {
+                val parentWidth = (mImageView.parent as View).width
+                val parentHeight = (mImageView.parent as View).height
+                mImageView.x = (parentWidth - mImageView.width) / 2f
+                mImageView.y = (parentHeight - mImageView.height) / 2f
+            }
             if (isMirrorSelected){
                 bMirror.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_white)
                 bMirror.setTextColor(Color.BLACK)
@@ -1091,6 +1174,12 @@ class MainActivity : AppCompatActivity() {
             //seekbarbrightness.layoutParams = LinearLayout.LayoutParams(170, 170)
             bBacklight.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.backlight_off))
             imageContainer.setPadding(100)
+            mImageView.post {
+                val parentWidth = (mImageView.parent as View).width
+                val parentHeight = (mImageView.parent as View).height
+                mImageView.x = (parentWidth - mImageView.width) / 2f
+                mImageView.y = (parentHeight - mImageView.height) / 2f
+            }
             if (isMirrorSelected){
                 bMirror.background = ContextCompat.getDrawable(this@MainActivity, R.drawable.rounded_blck)
                 bMirror.setTextColor(Color.WHITE)
@@ -1109,18 +1198,21 @@ class MainActivity : AppCompatActivity() {
         if(isInShot) return
         val intent = Intent(this@MainActivity, Info360Activity::class.java)
         startActivity(intent)
+        isAppStarted = false
     }
 
     fun onOpengalleryClick(v: View){
         if(isInShot) return
-        val intent = Intent(this@MainActivity, mirror.hand.makeup.shaving.best.zoom.pocket.selfie.GalleryActivity::class.java)
+        val intent = Intent(this@MainActivity, GalleryActivity::class.java)
         startActivity(intent)
+        isAppStarted = false
     }
 
     fun noAdsClick(v: View){
         if(isInShot) return
         val intent = Intent(this@MainActivity, PayActivity::class.java)
         startActivity(intent)
+        isAppStarted = false
     }
 
     fun onCamShot(v: View){
@@ -1142,6 +1234,13 @@ class MainActivity : AppCompatActivity() {
     private fun adjustBacklight(seekBar: SeekBar) {
         val light = seekBar.progress+100
         imageContainer.setPadding(light)
+        mImageView.post {
+            val parentWidth = (mImageView.parent as View).width
+            val parentHeight = (mImageView.parent as View).height
+            mImageView.x = (parentWidth - mImageView.width) / 2f
+            mImageView.y = (parentHeight - mImageView.height) / 2f
+        }
+
     }
 
     private fun hideShowInterface(hide: Boolean = true){
@@ -1435,7 +1534,7 @@ class MainActivity : AppCompatActivity() {
 
         private fun getOrientation(): Int{
             //получаем необходимую ориентацию
-            val display = (ctx.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+            val display = (ctx.getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay
             var rotation = display.rotation
             val isFrontCamera = characteristics?.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
             val sensorOrnt = characteristics?.get(CameraCharacteristics.SENSOR_ORIENTATION)
@@ -1458,6 +1557,7 @@ class MainActivity : AppCompatActivity() {
             object : OnImageAvailableListener {
                 override fun onImageAvailable(reader: ImageReader) {
                     run {
+                        isAppStarted = false
                         if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                             // Do the file write
                         } else {
@@ -1556,10 +1656,9 @@ private class ImageSaver internal constructor(image: Image, file: File, mask: Bi
         } finally {
             if (null != output) {
                 try {
-                    val intent = Intent(ctx, mirror.hand.makeup.shaving.best.zoom.pocket.selfie.FullscreenActivity::class.java)
+                    val intent = Intent(ctx, FullscreenActivity::class.java)
                     intent.putExtra("imgPath", mFile.absolutePath)
                     intent.putExtra("mode", "preview")
-                    if (mFile.exists()) viewModel.lastImagePath = mFile.absolutePath
                     ctx.startActivity(intent)
                     mImage.close()
                     output.close()

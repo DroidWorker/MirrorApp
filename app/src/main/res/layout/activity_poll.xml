@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:background="#000000"
     android:padding="48dp"
+    android:tag="2"
     tools:context=".PollActivity">
 
     <TextView
@@ -24,6 +25,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="24dp"
         android:onClick="onClick"
+        android:tag="1"
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout2"
         app:layout_constraintTop_toBottomOf="@+id/pollTitle"
         tools:layout_editor_absoluteX="48dp">
@@ -33,7 +35,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawablePadding="10dp"
-            android:onClick="onClick"
             android:tag="1"
             android:text="@string/poll_1"
             android:textColor="#FFFFFF"
@@ -57,6 +58,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:onClick="onClick"
+        android:tag="3"
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout4"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayout2"
         tools:layout_editor_absoluteX="30dp">
@@ -66,7 +68,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawablePadding="10dp"
-            android:onClick="onClick"
             android:tag="3"
             android:text="@string/poll_3"
             android:textColor="#FFFFFF"
@@ -110,7 +111,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawablePadding="10dp"
-            android:onClick="onClick"
             android:tag="2"
             android:text="@string/poll_2"
             android:textColor="#FFFFFF"
@@ -125,6 +125,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:onClick="onClick"
+        android:tag="4"
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout8"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayout3"
         tools:layout_editor_absoluteX="30dp">
@@ -134,7 +135,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawablePadding="10dp"
-            android:onClick="onClick"
             android:tag="4"
             android:text="@string/poll_4"
             android:textColor="#FFFFFF"
@@ -159,6 +159,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:onClick="onClick"
+        android:tag="5"
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout6"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayout4"
         tools:layout_editor_absoluteX="30dp">
@@ -168,7 +169,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawablePadding="10dp"
-            android:onClick="onClick"
             android:tag="5"
             android:text="@string/poll_5"
             android:textColor="#FFFFFF"
@@ -194,6 +194,7 @@
         android:layout_height="0dp"
         android:layout_marginBottom="24dp"
         android:onClick="onClick"
+        android:tag="6"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayout8"
         tools:layout_editor_absoluteX="30dp">
@@ -203,7 +204,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawablePadding="10dp"
-            android:onClick="onClick"
             android:tag="6"
             android:text="@string/poll_6"
             android:textColor="#FFFFFF"

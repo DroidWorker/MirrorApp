@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.constraintlayout.widget.ConstraintLayout
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 
 class PollActivity : AppCompatActivity() {
@@ -51,7 +52,7 @@ class PollActivity : AppCompatActivity() {
     }
 
     fun onClick(v: View){
-        val tv = v as TextView
+        val tv = v as ConstraintLayout
         when(tv.tag.toString()){
             "1"->{
                 votes["Shave"]?.let { userViewModel.addVote("Shave", it+1) }

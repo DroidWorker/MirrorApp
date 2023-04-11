@@ -49,21 +49,29 @@ class SplashActivity : AppCompatActivity() {
         if (viewModel.myAppsString=="Error")viewModel.getMyAppsLink()
         val remoteConfig: FirebaseRemoteConfig = Firebase.remoteConfig
         val configSettings = remoteConfigSettings {
-            minimumFetchIntervalInSeconds = 3600
+            minimumFetchIntervalInSeconds = 10
         }
         remoteConfig.setConfigSettingsAsync(configSettings)
         remoteConfig.fetchAndActivate()
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     val updated = task.result
+                    val adBannerTimer = remoteConfig.getDouble("adBannerTimer").toInt()
+                    val rateRequestTimer = remoteConfig.getDouble("rateRequestTimer").toInt()
+                    val splashDelay = remoteConfig.getDouble("splashDelay").toInt()
+
+                    viewModel.adBannerTimer = adBannerTimer
+                    viewModel.rateRequestTimer = rateRequestTimer
+                    viewModel.splashDelay = splashDelay
+
+                    println("adBannerTimer=$adBannerTimer")
+                    println("rateRequestTimer=$rateRequestTimer")
+                    println("splashDelay=$splashDelay")
                     println("Fetch and activate succeeded")
                 } else {
                     println("Fetch failed")
                 }
             }
-        viewModel.adBannerTimer=(remoteConfig.getDouble("adBannerTimer").toInt())
-        viewModel.rateRequestTimer=(remoteConfig.getDouble("rateRequestTimer").toInt())
-        viewModel.splashDelay=(remoteConfig.getDouble("splashDelay").toInt())
 
         //syncronizedGP
         val purchasesUpdatedListener =

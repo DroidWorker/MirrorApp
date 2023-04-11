@@ -9,10 +9,10 @@ android {
 
     defaultConfig {
         applicationId "mirror.hand.makeup.shaving.best.zoom.pocket.selfie"
-        minSdk 23
+        minSdk 24
         targetSdk 32
-        versionCode 14
-        versionName "1.0.1"
+        versionCode 18
+        versionName "1.0.18"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -75,6 +75,11 @@ dependencies {
 
     //video
     implementation 'com.github.MasayukiSuda:CameraRecorder-android:v0.1.5'
+    //videoEdit
+    //implementation 'com.github.MasayukiSuda:Mp4Composer-android:v0.4.1'
+    implementation 'com.github.MasayukiSuda:GPUVideo-android:v0.1.2'
+    //progressbar
+    implementation 'com.github.ybq:Android-SpinKit:1.4.0'
 
     //exoplayer
     implementation 'com.google.android.exoplayer:exoplayer-core:2.17.0'

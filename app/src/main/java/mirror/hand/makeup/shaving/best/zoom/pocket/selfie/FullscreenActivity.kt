@@ -62,14 +62,11 @@ class FullscreenActivity : AppCompatActivity() {
             imgs = getImagesFromFolder()
             val tmplist: MutableList<String> = imgs.keys.toMutableList()
             val index = tmplist.indexOf(path)
-            if (index != -1) {
-                tmplist.removeAt(index)
-                tmplist.add(0, path!!)
-            }
             adapter = PhotoPagerAdapter()
             adapter.setPhotos(tmplist)
             val viewPager = findViewById<ViewPager2>(R.id.fullscreenImage)
             viewPager.adapter = adapter
+            viewPager.currentItem = index
             viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
@@ -103,6 +100,7 @@ class FullscreenActivity : AppCompatActivity() {
             }
         }
         saveImg = true
+        if(path!=null) viewModel.lastImagePath = path!!
         val toast = Toast.makeText(ctx, "Изображение сохранено", Toast.LENGTH_SHORT)
         toast.show()
         finish()

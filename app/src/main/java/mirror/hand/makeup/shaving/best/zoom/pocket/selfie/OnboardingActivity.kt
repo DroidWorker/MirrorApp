@@ -122,9 +122,11 @@ class OnboardingActivity : AppCompatActivity(), PurchasesUpdatedListener {
         }
 
         close.setOnClickListener{
-            val payIntent = Intent(this@OnboardingActivity, PayActivity::class.java)
+            val intent = Intent(this@OnboardingActivity, PayActivity::class.java)
+            intent.putExtra("showVote", true)
             finish()
-            startActivity(payIntent)
+            startActivity(intent)
+            return@setOnClickListener
         }
     }
 

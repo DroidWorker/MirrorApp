@@ -32,6 +32,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
         setContentView(R.layout.activity_pay)
 
         showVote = intent.getBooleanExtra("showVote", false)
+        println("showwote"+showVote)
 
         //syncronizedGP
         val purchasesUpdatedListener =

@@ -214,13 +214,16 @@ class GalleryActivity : AppCompatActivity() {
         if (folder.exists()) {
             for (file in folder.listFiles()) {
                 if (file.isFile) {
-                    val filename = file.name.replace(".mp4", "")
-                    println("koko")
-                    //create preview
-                    if (!File(
-                            this.getExternalFilesDir("")
-                                .toString() + "/videos/thumb/${filename}.png"
-                        ).exists()){
+                    if (file.exists() && file.length() == 0L) {
+                        file.delete()
+                    }else {
+                        val filename = file.name.replace(".mp4", "")
+                        //create preview
+                        if (!File(
+                                this.getExternalFilesDir("")
+                                    .toString() + "/videos/thumb/${filename}.png"
+                            ).exists()
+                        ) {
                             val mediaMetadataRetriever = MediaMetadataRetriever()
                             mediaMetadataRetriever.setDataSource(file.absolutePath)
                             //save preview
@@ -239,16 +242,17 @@ class GalleryActivity : AppCompatActivity() {
                             }
 
                             mediaMetadataRetriever.release()
-                }
-                    try {
-                        val f = File(
-                            this.getExternalFilesDir("")
-                                .toString() + "/videos/thumb/${filename}.png"
-                        )
-                        vids[f.name.replace(".png", "")] =
-                            BitmapFactory.decodeFile(f.absolutePath)
-                    } catch (ex: Exception) {
-                        Log.e("parceThumbError", ex.stackTraceToString())
+                        }
+                        try {
+                            val f = File(
+                                this.getExternalFilesDir("")
+                                    .toString() + "/videos/thumb/${filename}.png"
+                            )
+                            vids[f.name.replace(".png", "")] =
+                                BitmapFactory.decodeFile(f.absolutePath)
+                        } catch (ex: Exception) {
+                            Log.e("parceThumbError", ex.stackTraceToString())
+                        }
                     }
                 }
             }
@@ -261,5 +265,7 @@ class GalleryActivity : AppCompatActivity() {
         if (file.exists()) {
             file.delete()
         }
+        val imgs = getImagesFromFolder("img")
+        userViewModel.lastImagePath = imgs.keys.last()
     }
 }
