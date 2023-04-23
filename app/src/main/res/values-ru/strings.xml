@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Hand Mirror</string>
-    <string name="version">Версия 1.01</string>
+    <string name="version">Версия 1.0.20</string>
     <string name="def_err_text">Неизвестная ошибка!</string>
     <string name="splash_text">Ты сегодня\nлучше всех ✨</string>
     <string name="onboarding_title_1">Зеркало \nв твоем кармане!</string>

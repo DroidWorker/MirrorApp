@@ -28,6 +28,12 @@ class VIdeoTool(context: Context, act : Activity) {
         val frameLayout: FrameLayout = act.findViewById(R.id.surfaceView)
         frameLayout.visibility = View.VISIBLE
         frameLayout.addView(sampleGLView)
+        /*frameLayout.post {
+            frameLayout.x = (0-50).toFloat()
+            frameLayout.y = (0-50).toFloat()
+            frameLayout.scaleX = 1.1f
+            frameLayout.scaleY = 1.1f
+        }*/
 
         cameraRecorder = CameraRecorderBuilder(act, sampleGLView)
             .lensFacing(LensFacing.FRONT)

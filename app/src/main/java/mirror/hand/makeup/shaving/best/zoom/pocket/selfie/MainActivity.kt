@@ -45,6 +45,7 @@ import com.github.ybq.android.spinkit.SpinKitView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.MascsAdapter
@@ -68,6 +69,7 @@ class MainActivity : AppCompatActivity() {
     var isCamStarted = false
     var isInShot = false
     var is360Mode = false
+    var scale = 0
 
     var cameraMode = "photo"
 
@@ -89,6 +91,7 @@ class MainActivity : AppCompatActivity() {
 
     private val timerAdBanner : Timer = Timer()
     private val timerRateRequest : Timer = Timer()
+    private val payWallTimer : Timer = Timer()
 
     lateinit var mImageView: TextureView
     lateinit var mSurfaceView: SurfaceView
@@ -103,6 +106,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var mask3 : ImageButton
     lateinit var mask4 : ImageButton
     lateinit var progressBar : SpinKitView
+
+    var bottomSheetDialog : SmoothBottomSheetDialog? = null
 
     var currentProgressValue = 0f
 
@@ -244,7 +249,6 @@ class MainActivity : AppCompatActivity() {
         //adTimer
         if (!timerAdBanner.isStarted&&userViewModel.isFeedbackActive){
             timerAdBanner.startTimer((userViewModel.adBannerTimer*60000).toLong())
-            println("opopopopopo"+userViewModel.adBannerTimer)
         }
         timerAdBanner.listener = {
             findViewById<AdView>(R.id.adViewMain).visibility = View.GONE
@@ -255,31 +259,35 @@ class MainActivity : AppCompatActivity() {
 
         if (!timerRateRequest.isStarted&&userViewModel.isFeedbackActive)timerRateRequest.startTimer((userViewModel.rateRequestTimer*60000).toLong())
         timerRateRequest.listener = {
-
             var rate = 0
-            val bottomSheetDialog = SmoothBottomSheetDialog(this)
-            bottomSheetDialog.setContentView(R.layout.bottom_sheet_dialog_rate)
+            if (bottomSheetDialog==null)
+                bottomSheetDialog = SmoothBottomSheetDialog(this)
+            else{
+                bottomSheetDialog!!.dismiss()
+                bottomSheetDialog = SmoothBottomSheetDialog(this)
+            }
+            bottomSheetDialog!!.setContentView(R.layout.bottom_sheet_dialog_rate)
 
-            val step1 = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.bsdrateStep1)
-            val stepOK = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.bsdrateStepOK)
-            val stepBAD = bottomSheetDialog.findViewById<ConstraintLayout>(R.id.bsdrateStepBAD)
+            val step1 = bottomSheetDialog!!.findViewById<ConstraintLayout>(R.id.bsdrateStep1)
+            val stepOK = bottomSheetDialog!!.findViewById<ConstraintLayout>(R.id.bsdrateStepOK)
+            val stepBAD = bottomSheetDialog!!.findViewById<ConstraintLayout>(R.id.bsdrateStepBAD)
 
             //if like
-            val buttonOK = bottomSheetDialog.findViewById<Button>(R.id.buttonOK)
+            val buttonOK = bottomSheetDialog!!.findViewById<Button>(R.id.buttonOK)
             //if hate
-            val buttonBAD = bottomSheetDialog.findViewById<Button>(R.id.buttonBAD)
+            val buttonBAD = bottomSheetDialog!!.findViewById<Button>(R.id.buttonBAD)
 
             buttonOK?.setOnClickListener {
                 rate=-1
                 step1?.visibility = View.GONE
                 stepOK?.visibility = View.VISIBLE
 
-                val star1 = bottomSheetDialog.findViewById<ImageView>(R.id.star1)
-                val star2 = bottomSheetDialog.findViewById<ImageView>(R.id.star2)
-                val star3 = bottomSheetDialog.findViewById<ImageView>(R.id.star3)
-                val star4 = bottomSheetDialog.findViewById<ImageView>(R.id.star4)
-                val star5 = bottomSheetDialog.findViewById<ImageView>(R.id.star5)
-                val buttonRate = bottomSheetDialog.findViewById<Button>(R.id.bsdrateRate)
+                val star1 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star1)
+                val star2 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star2)
+                val star3 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star3)
+                val star4 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star4)
+                val star5 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star5)
+                val buttonRate = bottomSheetDialog!!.findViewById<Button>(R.id.bsdrateRate)
 
                 star1?.setOnClickListener{
                     rate = 1
@@ -306,7 +314,7 @@ class MainActivity : AppCompatActivity() {
                     userViewModel.isFeedbackActive = false
                     timerRateRequest.stop()
                     if (rate in 1..3){
-                        bottomSheetDialog.hide()
+                        bottomSheetDialog!!.hide()
                         return@setOnClickListener
                     }
                     else if(rate>3){
@@ -326,8 +334,8 @@ class MainActivity : AppCompatActivity() {
                 step1?.visibility = View.GONE
                 stepBAD?.visibility = View.VISIBLE
 
-                val etText = bottomSheetDialog.findViewById<EditText>(R.id.BSDRateBadEditText)
-                val buttonSendText = bottomSheetDialog.findViewById<Button>(R.id.BSDRateBadSend)
+                val etText = bottomSheetDialog!!.findViewById<EditText>(R.id.BSDRateBadEditText)
+                val buttonSendText = bottomSheetDialog!!.findViewById<Button>(R.id.BSDRateBadSend)
 
                 buttonSendText?.setOnClickListener{
                     userViewModel.isFeedbackActive = false
@@ -342,16 +350,26 @@ class MainActivity : AppCompatActivity() {
                         if (intent.resolveActivity(this.packageManager) != null) {
                             startActivity(Intent.createChooser(intent, "Send mail..."))
                             isAppStarted = false
-                            bottomSheetDialog.hide()
+                            bottomSheetDialog!!.hide()
                         } else {
                             Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             }
-            bottomSheetDialog.show()
+            bottomSheetDialog!!.show()
             if (!timerRateRequest.isStarted&&userViewModel.isFeedbackActive){
                 timerRateRequest.startTimer((userViewModel.rateRequestTimer*60000).toLong())
+            }
+        }
+        if (userViewModel.isADActive){
+            payWallTimer.startTimer((userViewModel.paywallTimer*60000).toLong())
+            payWallTimer.listener={
+                val intent = Intent(this@MainActivity, PayActivity::class.java)
+                startActivity(intent)
+                isAppStarted = false
+                if (userViewModel.isADActive&&payWallTimer.isStarted)
+                    payWallTimer.startTimer((userViewModel.paywallTimer*60000).toLong())
             }
         }
 
@@ -553,6 +571,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume(){
         super.onResume()
+        findViewById<SeekBar>(R.id.seekBar3).progress = 1
         //синхронизируем с галереей
         if(userViewModel.lastImagePath!="err"&&File(userViewModel.lastImagePath).exists()) {
             findViewById<ImageView>(R.id.openGalery).setImageURI(Uri.fromFile(File(userViewModel.lastImagePath)))
@@ -791,8 +810,12 @@ class MainActivity : AppCompatActivity() {
                 mImageView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
                     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
                         surfaceforVT = Surface(surface)
-                        myCameras!![openedCamera].openCamera()
-                        myCameras!![openedCamera].setFocusBySeekBar(findViewById(R.id.seekBar))
+                        try {
+                            myCameras!![openedCamera].openCamera()
+                            myCameras!![openedCamera].setFocusBySeekBar(findViewById(R.id.seekBar))
+                        }catch (ex : Exception){
+
+                        }
                     }
                     override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {}
                     override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
@@ -815,15 +838,68 @@ class MainActivity : AppCompatActivity() {
             findViewById<Button>(R.id.clear).text = resources.getString(R.string.okey)
         }
         else if(dialogStep==2){
-            userViewModel.isFeedbackActive = false
             timerAdBanner.stop()
-            try {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
-                isAppStarted = false
-            } catch (e: ActivityNotFoundException) {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
-                isAppStarted = false
-            }
+            val bottomSheetDialogr = SmoothBottomSheetDialog(this)
+            bottomSheetDialogr.setContentView(R.layout.bottom_sheet_dialog_rate)
+
+            val step1 = bottomSheetDialogr.findViewById<ConstraintLayout>(R.id.bsdrateStep1)
+            val stepOK = bottomSheetDialogr.findViewById<ConstraintLayout>(R.id.bsdrateStepOK)
+            step1?.visibility = View.GONE
+            stepOK?.visibility = View.VISIBLE
+
+                var rate=-1
+
+                val star1 = bottomSheetDialogr.findViewById<ImageView>(R.id.star1)
+                val star2 = bottomSheetDialogr.findViewById<ImageView>(R.id.star2)
+                val star3 = bottomSheetDialogr.findViewById<ImageView>(R.id.star3)
+                val star4 = bottomSheetDialogr.findViewById<ImageView>(R.id.star4)
+                val star5 = bottomSheetDialogr.findViewById<ImageView>(R.id.star5)
+                val buttonRate = bottomSheetDialogr.findViewById<Button>(R.id.bsdrateRate)
+
+                star1?.setOnClickListener{
+                    rate=1
+                    selectStar(star1, star2, star3, star4, star5, buttonRate, 1)
+                }
+                star2?.setOnClickListener{
+                    rate=2
+                    selectStar(star1, star2, star3, star4, star5, buttonRate, 2)
+                }
+                star3?.setOnClickListener{
+                    rate=3
+                    selectStar(star1, star2, star3, star4, star5, buttonRate, 3)
+                }
+                star4?.setOnClickListener{
+                    rate=4
+                    selectStar(star1, star2, star3, star4, star5, buttonRate, 4)
+                }
+                star5?.setOnClickListener{
+                    rate=5
+                    selectStar(star1, star2, star3, star4, star5, buttonRate, 5)
+                }
+
+                buttonRate?.setOnClickListener{
+                    userViewModel.isFeedbackActive = false
+                    findViewById<AdView>(R.id.adViewMain).visibility = View.VISIBLE
+                    findViewById<TextView>(R.id.textView12).visibility = View.GONE
+                    findViewById<MaterialButton>(R.id.clear).visibility = View.GONE
+                    findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.GONE
+                    timerRateRequest.stop()
+                    timerAdBanner.stop()
+                    if (rate in 1..3){
+                        bottomSheetDialogr.hide()
+                        return@setOnClickListener
+                    }
+                    else if(rate>3){
+                        try {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                        } catch (e: ActivityNotFoundException) {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                        }
+                        return@setOnClickListener
+                    }
+                }
+
+            bottomSheetDialogr.show()
         }else{
             //feedback
             val bottomSheetDialog = SmoothBottomSheetDialog(this)
@@ -1363,6 +1439,8 @@ class MainActivity : AppCompatActivity() {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                     if (fromUser) {
                         try {
+                            scale = progress
+                            if (cameraMode != "video"){
                             // Get the minimum and maximum focus distances supported by the camera
                             val focusRange = characteristics?.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE) to
                                     characteristics?.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE)
@@ -1386,6 +1464,7 @@ class MainActivity : AppCompatActivity() {
                             // Update the focus distance in the current capture session
                             if (captureRequestBuilder != null && mCaptureSession!=null) {
                                 mCaptureSession?.setRepeatingRequest(captureRequestBuilder.build(), null, null)
+                            }
                             }
                         } catch (e: CameraAccessException) {
                             Log.e("focusERR", "Failed to change focus", e)
@@ -1420,6 +1499,7 @@ class MainActivity : AppCompatActivity() {
                 //zoom
                 findViewById<SeekBar>(R.id.seekBar3).setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
                             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+
                                 val sensorRect =
                                     characteristics!!.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
 
@@ -1515,6 +1595,30 @@ class MainActivity : AppCompatActivity() {
                 val captureBuilder =
                     mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
                 captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, orientation)
+                val zoomValue = findViewById<SeekBar>(R.id.seekBar3).progress
+
+                // Calculate the crop region based on the current zoom value
+                val sensorRect =
+                    characteristics!!.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+                val maxZoom =
+                    characteristics!!.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)!!
+                val zoomRatio = (100f-zoomValue) / 100
+                val cropWidth = sensorRect!!.width() - Math.round(
+                    sensorRect!!.width().toFloat() * zoomRatio
+                )
+                val cropHeight = sensorRect!!.height() - Math.round(
+                    sensorRect!!.height()
+                        .toFloat() * zoomRatio
+                )
+                val zoomRect = Rect(
+                    cropWidth / 2,
+                    cropHeight / 2,
+                    sensorRect!!.width() - cropWidth / 2,
+                    sensorRect!!.height() - cropHeight / 2
+                )
+
+                // Set the crop region in the capture request builder
+                captureBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoomRect)
                 captureBuilder.addTarget(mImageReader!!.surface)
                 val CaptureCallback: CaptureCallback = object : CaptureCallback() {
                     override fun onCaptureCompleted(

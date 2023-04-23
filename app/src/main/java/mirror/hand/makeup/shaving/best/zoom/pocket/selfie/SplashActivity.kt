@@ -49,7 +49,7 @@ class SplashActivity : AppCompatActivity() {
         if (viewModel.myAppsString=="Error")viewModel.getMyAppsLink()
         val remoteConfig: FirebaseRemoteConfig = Firebase.remoteConfig
         val configSettings = remoteConfigSettings {
-            minimumFetchIntervalInSeconds = 10
+            minimumFetchIntervalInSeconds = 3600
         }
         remoteConfig.setConfigSettingsAsync(configSettings)
         remoteConfig.fetchAndActivate()
@@ -59,14 +59,13 @@ class SplashActivity : AppCompatActivity() {
                     val adBannerTimer = remoteConfig.getDouble("adBannerTimer").toInt()
                     val rateRequestTimer = remoteConfig.getDouble("rateRequestTimer").toInt()
                     val splashDelay = remoteConfig.getDouble("splashDelay").toInt()
+                    val paywallTimer = remoteConfig.getDouble("paywallTimer").toInt()
 
                     viewModel.adBannerTimer = adBannerTimer
                     viewModel.rateRequestTimer = rateRequestTimer
                     viewModel.splashDelay = splashDelay
+                    viewModel.paywallTimer = paywallTimer
 
-                    println("adBannerTimer=$adBannerTimer")
-                    println("rateRequestTimer=$rateRequestTimer")
-                    println("splashDelay=$splashDelay")
                     println("Fetch and activate succeeded")
                 } else {
                     println("Fetch failed")
@@ -84,7 +83,8 @@ class SplashActivity : AppCompatActivity() {
             .enablePendingPurchases()
             .build()
 
-        startConnection(billingClient)
+        //startConnection(billingClient)
+        checkActiveSubscription(billingClient)
 
         val tv = findViewById<TextView>(R.id.splashText)
         tv.text = viewModel.splashText
@@ -203,5 +203,20 @@ class SplashActivity : AppCompatActivity() {
                 startConnection(billingClient)
             }
         })
+    }
+    private fun checkActiveSubscription(billingClient: BillingClient) {
+        val purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS)
+        if (purchasesResult.purchasesList != null && purchasesResult.purchasesList!!.isNotEmpty()) {
+            for (purchase in purchasesResult.purchasesList!!) {
+                // Проверка статуса подписки
+                if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && purchase.isAutoRenewing) {
+                    viewModel.subscriptionType = "on"
+                    viewModel.isADActive = false
+                    return
+                }
+            }
+        }
+        viewModel.subscriptionType = "off"
+        viewModel.isADActive = true
     }
 }

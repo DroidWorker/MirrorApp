@@ -66,7 +66,7 @@ class FullscreenActivity : AppCompatActivity() {
             adapter.setPhotos(tmplist)
             val viewPager = findViewById<ViewPager2>(R.id.fullscreenImage)
             viewPager.adapter = adapter
-            viewPager.currentItem = index
+            viewPager.setCurrentItem(index, false)
             viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)

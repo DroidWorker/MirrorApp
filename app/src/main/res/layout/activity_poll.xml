@@ -92,6 +92,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:onClick="onClick"
+        android:tag="2"
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout3"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayout1"
         tools:layout_editor_absoluteX="30dp">
