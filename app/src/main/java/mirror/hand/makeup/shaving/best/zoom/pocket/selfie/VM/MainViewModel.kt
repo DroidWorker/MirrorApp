@@ -79,18 +79,40 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
         }
 
     var adBannerTimer : Int
-    get() = sharedPreference.getInt("adBannerTimer", 15)
+    get() = sharedPreference.getInt("adBannerTimer", 2)
     set(value){
         editor.putInt("adBannerTimer", value)
         editor.apply()
     }
 
     var rateRequestTimer : Int
-        get() = sharedPreference.getInt("rateRequestTimer", 3)
+        get() = sharedPreference.getInt("rateRequestTimer", 2)
         set(value){
             editor.putInt("rateRequestTimer", value)
             editor.apply()
         }
+
+    var paywallTimer : Int
+        get() = sharedPreference.getInt("paywallTimer", 10)
+        set(value){
+            editor.putInt("paywallTimer", value)
+            editor.apply()
+        }
+
+    var interstitialTimer : Int
+        get() = sharedPreference.getInt("InterstitialTimer", 60)
+        set(value){
+            editor.putInt("InterstitialTimer", value)
+            editor.apply()
+        }
+
+    var lastInterstitialShowed : Long = 0
+        get() = sharedPreference.getLong("lastInterstitialShowed", 0)
+    fun shotCurrentADTime(){
+        editor.putLong("lastInterstitialShowed", System.currentTimeMillis())
+        editor.apply()
+    }
+
 
     var splashDelay : Int
         get() = sharedPreference.getInt("splashDelay", 3000)

@@ -60,11 +60,13 @@ class SplashActivity : AppCompatActivity() {
                     val rateRequestTimer = remoteConfig.getDouble("rateRequestTimer").toInt()
                     val splashDelay = remoteConfig.getDouble("splashDelay").toInt()
                     val paywallTimer = remoteConfig.getDouble("paywallTimer").toInt()
+                    val interstitialTimer = remoteConfig.getDouble("interstitialTimer").toInt()
 
                     viewModel.adBannerTimer = adBannerTimer
                     viewModel.rateRequestTimer = rateRequestTimer
                     viewModel.splashDelay = splashDelay
                     viewModel.paywallTimer = paywallTimer
+                    viewModel.interstitialTimer = interstitialTimer
 
                     println("Fetch and activate succeeded")
                 } else {
@@ -107,6 +109,11 @@ class SplashActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        createNotiication()
+        super.onDestroy()
+    }
+
+    fun createNotiication(){
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
 // уникальный идентификатор уведомления
@@ -162,7 +169,6 @@ class SplashActivity : AppCompatActivity() {
             notificationManager.notify(notificationId, builder.build())
             notificationManager.cancel(notificationId)
         }
-        super.onDestroy()
     }
 
     fun close(){

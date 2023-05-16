@@ -1,19 +1,27 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.RemoteViews
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.core.app.NotificationCompat
 import androidx.viewpager.widget.ViewPager
 import com.android.billingclient.api.*
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.OnboardingViewAdapter
 import com.tbuonomo.viewpagerdotsindicator.SpringDotsIndicator
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.NotificationReceiver
 
 class OnboardingActivity : AppCompatActivity(), PurchasesUpdatedListener {
     private val userViewModel by viewModels<MainViewModel>()
@@ -128,6 +136,64 @@ class OnboardingActivity : AppCompatActivity(), PurchasesUpdatedListener {
             startActivity(intent)
             return@setOnClickListener
         }
+    }
+
+    override fun onDestroy() {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+// уникальный идентификатор уведомления
+        val notificationId = 257894
+
+// проверяем, было ли уже показано уведомление
+        val activeNotifications = notificationManager.activeNotifications
+        val notificationAlreadyShown = activeNotifications.any { it.id == notificationId }
+
+        if (!notificationAlreadyShown) {
+            // создаем уведомление и выводим его
+
+// Создаем канал уведомлений для Android O и выше
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    "appMirrorChannel",
+                    "AppMirror",
+                    NotificationManager.IMPORTANCE_HIGH
+                )
+                notificationManager.createNotificationChannel(channel)
+            }
+
+// Создаем интент, который будет запускаться при нажатии на уведомление
+            val intent = Intent(this, MainActivity::class.java)
+            val pendingIntent =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
+                else PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            val intentClose = Intent(this, NotificationReceiver::class.java).apply {
+                action = "mirror.hand.makeup.shaving.best.zoom.pocket.selfie.notification.ACTION_CLOSE"
+                putExtra("notification_id", notificationId)
+            }
+
+            val pendingIntentClose =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getBroadcast(this, 0, intentClose, PendingIntent.FLAG_MUTABLE)
+                else PendingIntent.getActivity(this, 0, intentClose, PendingIntent.FLAG_UPDATE_CURRENT)
+
+            val remoteViews = RemoteViews(packageName, R.layout.notification)
+            remoteViews.setTextViewText(R.id.notText, "Нажмите, чтобы открыть")
+            remoteViews.setOnClickPendingIntent(R.id.root, pendingIntent)
+            remoteViews.setOnClickPendingIntent(R.id.imageButton222, pendingIntentClose)
+// Создаем уведомление
+            val builder = NotificationCompat.Builder(this, "appMirrorChannel")
+                .setSmallIcon(R.drawable.app_icon)
+                .setContentTitle("BeauttyMirror")
+                .setCustomContentView(remoteViews)
+                .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(false) // флаг, который делает уведомление невозможным для закрытия свайпом
+                .setOngoing(true) // флаг, который делает уведомление невозможным для закрытия пользователем
+
+// Отображаем уведомление
+            notificationManager.notify(notificationId, builder.build())
+        }
+        super.onDestroy()
     }
 
     fun openPP(v : View){

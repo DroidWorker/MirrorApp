@@ -10,16 +10,15 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.widget.ViewPager2
+import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
-import com.google.android.material.color.utilities.Score.score
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.PhotoPagerAdapter
 import java.io.ByteArrayOutputStream
@@ -50,6 +49,35 @@ class FullscreenActivity : AppCompatActivity() {
         val adRequest = AdRequest.Builder().build()
         if(viewModel.isADActive) adView.loadAd(adRequest)
         else adView.visibility = View.GONE
+
+        adView.setAdListener(object : AdListener() {
+            override fun onAdClicked() {
+                // Code to be executed when the user clicks on an ad.
+            }
+
+            override fun onAdClosed() {
+                // Code to be executed when the user is about to return
+                // to the app after tapping on an ad.
+            }
+
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                Toast.makeText(applicationContext, "ERROR| "+adError.message, Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onAdImpression() {
+                // Code to be executed when an impression is recorded
+                // for an ad.
+            }
+
+            override fun onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+            }
+
+            override fun onAdOpened() {
+                // Code to be executed when an ad opens an overlay that
+                // covers the screen.
+            }
+        })
 
 
         if (mode=="preview") {

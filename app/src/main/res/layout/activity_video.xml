@@ -7,15 +7,7 @@
     android:background="#000000"
     tools:context=".VideoActivity">
 
-    <!--<VideoView
-        android:id="@+id/videoView"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/timelineView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />-->
-    <com.google.android.exoplayer2.ui.PlayerView
+    <!--<com.google.android.exoplayer2.ui.PlayerView
         android:id="@+id/videoView"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
@@ -24,9 +16,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        />-->
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/videoPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         />
 
-    <mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.TimelineView
+    <!--<mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.TimelineView
         android:id="@+id/timelineView"
         android:layout_width="0dp"
         android:layout_height="50dp"
@@ -38,7 +39,7 @@
         app:layout_constraintStart_toEndOf="@+id/imageButton6"
         app:left_thumb_color="@color/black"
         app:progress_thumb_color="@color/white"
-        app:right_thumb_color="@color/black" />
+        app:right_thumb_color="@color/black" />-->
 
     <ImageButton
         android:id="@+id/imageView4"
@@ -76,7 +77,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/download_black" />
 
-    <ImageButton
+    <!--<ImageButton
         android:id="@+id/imageButton6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -86,6 +87,6 @@
         android:onClick="onPausePlayClick"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/videoView"
-        app:srcCompat="@drawable/pause" />
+        app:layout_constraintTop_toBottomOf="@+id/videoPager"
+        app:srcCompat="@drawable/pause" />-->
 </androidx.constraintlayout.widget.ConstraintLayout>

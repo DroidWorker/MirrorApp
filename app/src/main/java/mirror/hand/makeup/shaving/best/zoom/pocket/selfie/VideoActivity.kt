@@ -2,12 +2,15 @@ package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.location.GnssAntennaInfo
+import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.SeekBar
@@ -15,18 +18,23 @@ import android.widget.Toast
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.viewpager.widget.ViewPager
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerView
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.VideoPagerAdapter
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.fragment.VideoFragment
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.TimelineView
 import java.io.*
 import java.util.*
+import kotlin.collections.ArrayList
 
 class VideoActivity : AppCompatActivity() {
     lateinit var timeline : TimelineView
     lateinit var playerView : PlayerView
+    lateinit var videoPager : ViewPager
     lateinit var exoplayer : ExoPlayer
     var videoViewDuration = 0
 
@@ -42,66 +50,20 @@ class VideoActivity : AppCompatActivity() {
 
         mode  = intent.getStringExtra("mode") ?: "default"
         path = intent.getStringExtra("imgPath") ?: ""
+        videoPager = findViewById<ViewPager>(R.id.videoPager)
         if (path==""){
             Toast.makeText(this, "Ошибка видео", Toast.LENGTH_LONG).show()
             finish()
         }
-        val videoUri: Uri = Uri.fromFile(File(path))//Uri.parse("path/to/video.mp4")
+        val pathList =
+            if (mode=="preview") listOf(path)
+            else getVideoFromFolder()
 
-        timeline = findViewById(R.id.timelineView)
-        timeline.setVideoUri(videoUri)
-
-        //needed below line to properly pass the seek duration or if you dont set it you will get percent value
-        //the seekMillis value will be icorrect in the callback
-
-        exoplayer = ExoPlayer.Builder(this).build()
-        val mediaItem = MediaItem.fromUri(videoUri)
-        exoplayer.setMediaItem(mediaItem)
-        exoplayer.prepare()
-
-        playerView = findViewById<PlayerView>(R.id.videoView)
-
-// Настраиваем PlayerView, чтобы он отображал ExoPlayer
-        playerView.player = exoplayer
-        exoplayer.playWhenReady = true
-
-        exoplayer.addListener(object : Player.Listener {
-            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                super.onPlayerStateChanged(playWhenReady, playbackState)
-                when(playbackState) {
-                    Player.STATE_ENDED -> {
-                        // Перематываем в начало видео после его окончания
-                        exoplayer.seekTo(0)
-                        isPlay = false
-                        findViewById<ImageButton>(R.id.imageButton6).setImageResource(R.drawable.play)
-                        exoplayer.playWhenReady = false
-                    }
-                    Player.STATE_READY -> {
-                        timeline.setTotalDuration(exoplayer.duration)
-                        if (exoplayer.playWhenReady)timeline.smoothProgress()
-                    }
-                }
-            }
-        })
-
-        timeline.callback = object : TimelineView.Callback{
-            override fun onSeek(position: Float, seekMillis: Long) {
-
-            }
-
-            override fun onSeekStart(position: Float, seekMillis: Long) {
-            }
-
-            override fun onStopSeek(position: Float, seekMillis: Long) {
-                exoplayer.seekTo(seekMillis)
-                if(isPlay)timeline.smoothProgress()
-            }
-
-            override fun onLeftProgress(leftPos: Float, seekMillis: Long) {
-            }
-
-            override fun onRightProgress(rightPos: Float, seekMillis: Long) {
-            }
+        val videoPagerAdapter = VideoPagerAdapter(supportFragmentManager, pathList.toList())
+        videoPagerAdapter.mode = mode
+        videoPager.adapter = videoPagerAdapter
+        if (mode=="default"){
+            videoPager.setCurrentItem(pathList.indexOf(path), false)
         }
     }
 
@@ -112,10 +74,21 @@ class VideoActivity : AppCompatActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        //finish()
-        if(isPlay)onPausePlayClick(findViewById(R.id.imageButton6))
+    fun  getVideoFromFolder(): List<String>{
+        val folder = File(applicationContext.getExternalFilesDir(null), "videos")
+        val vids = ArrayList<String>()
+        if (folder.exists()) {
+            for (file in folder.listFiles()) {
+                if (file.isFile) {
+                    if (file.exists() && file.length() == 0L) {
+                        file.delete()
+                    }else {
+                        vids.add(file.absolutePath)
+                    }
+                }
+            }
+        }
+        return vids
     }
 
     fun onPausePlayClick(v: View){

@@ -100,11 +100,14 @@ class GalleryActivity : AppCompatActivity() {
     fun onDeleteClick(view: View){
         val dialogFragment = MyDialogFragment()
         dialogFragment.setOnPositiveButtonClickListener { ->
+            selectedItems.sortDescending()
             selectedItems.forEach{
                 adapter.getItemPath(it)?.let { it1 ->
                     if (it1.contains("mirrorImages"))   deleteFileByAbsolutePath(it1)
                     else deleteFileByAbsolutePath(File(this.getExternalFilesDir( "" ).toString()+ "/videos/${it1}.mp4").absolutePath)
                 }
+            }
+            selectedItems.forEach {
                 adapter.separatedImages.removeAt(it)
             }
             selectedItems.clear()
@@ -266,6 +269,7 @@ class GalleryActivity : AppCompatActivity() {
             file.delete()
         }
         val imgs = getImagesFromFolder("img")
-        userViewModel.lastImagePath = imgs.keys.last()
+        if (imgs.isNotEmpty()) userViewModel.lastImagePath = imgs.keys.last()
+        else userViewModel.lastImagePath = "err"
     }
 }

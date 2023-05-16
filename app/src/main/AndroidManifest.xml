@@ -32,7 +32,7 @@
         android:theme="@style/Theme.MirrorApp.NoActionBar">
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-8309718960294057~7033481825"/>
         <activity
             android:name=".VideoActivity"
             android:screenOrientation="portrait"

@@ -42,9 +42,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.daasuu.gpuv.composer.GPUMp4Composer
 import com.daasuu.gpuv.egl.filter.GlWatermarkFilter
 import com.github.ybq.android.spinkit.SpinKitView
+import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
@@ -88,6 +93,8 @@ class MainActivity : AppCompatActivity() {
     var backlightEnables = false
     var flipEnabled = false
     var isMirrorSelected = true
+
+    private var mInterstitialAd: InterstitialAd? = null
 
     private val timerAdBanner : Timer = Timer()
     private val timerRateRequest : Timer = Timer()
@@ -246,133 +253,6 @@ class MainActivity : AppCompatActivity() {
            else cp.smoothScrollToPosition(it-2)
        }
 
-        //adTimer
-        if (!timerAdBanner.isStarted&&userViewModel.isFeedbackActive){
-            timerAdBanner.startTimer((userViewModel.adBannerTimer*60000).toLong())
-        }
-        timerAdBanner.listener = {
-            findViewById<AdView>(R.id.adViewMain).visibility = View.GONE
-            findViewById<TextView>(R.id.textView12).visibility = View.VISIBLE
-            findViewById<MaterialButton>(R.id.clear).visibility = View.VISIBLE
-            findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.VISIBLE
-        }
-
-        if (!timerRateRequest.isStarted&&userViewModel.isFeedbackActive)timerRateRequest.startTimer((userViewModel.rateRequestTimer*60000).toLong())
-        timerRateRequest.listener = {
-            var rate = 0
-            if (bottomSheetDialog==null)
-                bottomSheetDialog = SmoothBottomSheetDialog(this)
-            else{
-                bottomSheetDialog!!.dismiss()
-                bottomSheetDialog = SmoothBottomSheetDialog(this)
-            }
-            bottomSheetDialog!!.setContentView(R.layout.bottom_sheet_dialog_rate)
-
-            val step1 = bottomSheetDialog!!.findViewById<ConstraintLayout>(R.id.bsdrateStep1)
-            val stepOK = bottomSheetDialog!!.findViewById<ConstraintLayout>(R.id.bsdrateStepOK)
-            val stepBAD = bottomSheetDialog!!.findViewById<ConstraintLayout>(R.id.bsdrateStepBAD)
-
-            //if like
-            val buttonOK = bottomSheetDialog!!.findViewById<Button>(R.id.buttonOK)
-            //if hate
-            val buttonBAD = bottomSheetDialog!!.findViewById<Button>(R.id.buttonBAD)
-
-            buttonOK?.setOnClickListener {
-                rate=-1
-                step1?.visibility = View.GONE
-                stepOK?.visibility = View.VISIBLE
-
-                val star1 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star1)
-                val star2 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star2)
-                val star3 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star3)
-                val star4 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star4)
-                val star5 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star5)
-                val buttonRate = bottomSheetDialog!!.findViewById<Button>(R.id.bsdrateRate)
-
-                star1?.setOnClickListener{
-                    rate = 1
-                    selectStar(star1, star2, star3, star4, star5, buttonRate, 1)
-                }
-                star2?.setOnClickListener{
-                    rate = 2
-                    selectStar(star1, star2, star3, star4, star5, buttonRate, 2)
-                }
-                star3?.setOnClickListener{
-                    rate = 3
-                    selectStar(star1, star2, star3, star4, star5, buttonRate, 3)
-                }
-                star4?.setOnClickListener{
-                    rate = 4
-                    selectStar(star1, star2, star3, star4, star5, buttonRate, 4)
-                }
-                star5?.setOnClickListener{
-                    rate = 5
-                    selectStar(star1, star2, star3, star4, star5, buttonRate, 5)
-                }
-
-                buttonRate?.setOnClickListener{
-                    userViewModel.isFeedbackActive = false
-                    timerRateRequest.stop()
-                    if (rate in 1..3){
-                        bottomSheetDialog!!.hide()
-                        return@setOnClickListener
-                    }
-                    else if(rate>3){
-                        try {
-                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
-                            isAppStarted = false
-                        } catch (e: ActivityNotFoundException) {
-                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
-                            isAppStarted = false
-                        }
-                        return@setOnClickListener
-                    }
-                }
-            }
-
-            buttonBAD?.setOnClickListener{
-                step1?.visibility = View.GONE
-                stepBAD?.visibility = View.VISIBLE
-
-                val etText = bottomSheetDialog!!.findViewById<EditText>(R.id.BSDRateBadEditText)
-                val buttonSendText = bottomSheetDialog!!.findViewById<Button>(R.id.BSDRateBadSend)
-
-                buttonSendText?.setOnClickListener{
-                    userViewModel.isFeedbackActive = false
-                    timerRateRequest.stop()
-                    if (etText?.text?.length!! >3){
-                        val intent = Intent(Intent.ACTION_SENDTO).apply {
-                            data = Uri.parse("mailto:")
-                            putExtra(Intent.EXTRA_EMAIL, arrayOf("smarteasyapps17@gmail.com"))
-                            putExtra(Intent.EXTRA_SUBJECT, "mirrorAPP")
-                            putExtra(Intent.EXTRA_TEXT, etText!!.text)
-                        }
-                        if (intent.resolveActivity(this.packageManager) != null) {
-                            startActivity(Intent.createChooser(intent, "Send mail..."))
-                            isAppStarted = false
-                            bottomSheetDialog!!.hide()
-                        } else {
-                            Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-            }
-            bottomSheetDialog!!.show()
-            if (!timerRateRequest.isStarted&&userViewModel.isFeedbackActive){
-                timerRateRequest.startTimer((userViewModel.rateRequestTimer*60000).toLong())
-            }
-        }
-        if (userViewModel.isADActive){
-            payWallTimer.startTimer((userViewModel.paywallTimer*60000).toLong())
-            payWallTimer.listener={
-                val intent = Intent(this@MainActivity, PayActivity::class.java)
-                startActivity(intent)
-                isAppStarted = false
-                if (userViewModel.isADActive&&payWallTimer.isStarted)
-                    payWallTimer.startTimer((userViewModel.paywallTimer*60000).toLong())
-            }
-        }
-
         // Создаем GestureDetector
         val gestureListener = GestureListener()
         gestureListener.swipeRight = {
@@ -492,21 +372,6 @@ class MainActivity : AppCompatActivity() {
                                 .listener(object : GPUMp4Composer.Listener{
                                     override fun onProgress(progress: Double) {
                                         runOnUiThread {
-                                            println("progress $progress")
-                                            /*val progressAnimator = ValueAnimator.ofFloat(
-                                                currentProgressValue,
-                                                progress.toFloat()
-                                            ).apply {
-                                                duration = 500
-                                                interpolator = LinearInterpolator()
-                                                addUpdateListener {
-                                                    currentProgressValue = it.animatedValue as Float
-                                                    progressBar.progress =
-                                                        (currentProgressValue * 100).toInt()
-                                                    println("animvalue"+currentProgressValue)
-                                                }
-                                            }
-                                            progressAnimator.start()*/
                                             progressBar.progress = (progress*100).toInt()
                                         }
                                     }
@@ -567,6 +432,39 @@ class MainActivity : AppCompatActivity() {
                 }
 
             }
+        MobileAds.initialize(
+            this
+        ) { }
+        val mAdView :AdView = findViewById(R.id.adViewMain)
+        val adRequest = AdRequest.Builder().build()
+        if(userViewModel.isADActive){
+            mAdView.loadAd(adRequest)
+            loadInterstitialAd(adRequest, true)
+            mInterstitialAd?.fullScreenContentCallback = object: FullScreenContentCallback() {
+                override fun onAdClicked() {
+                    // Called when a click is recorded for an ad.
+                    Log.d("InterstitialAd", "Ad was clicked.")
+                }
+
+                override fun onAdDismissedFullScreenContent() {
+                    // Called when ad is dismissed.
+                    Log.d("InterstitialAd", "Ad dismissed fullscreen content.")
+                    mInterstitialAd = null
+                    loadInterstitialAd(adRequest)
+                }
+
+                override fun onAdImpression() {
+                    // Called when an impression is recorded for an ad.
+                    Log.d("InterstitialAd", "Ad recorded an impression.")
+                }
+
+                override fun onAdShowedFullScreenContent() {
+                    // Called when ad is shown.
+                    Log.d("InterstitialAd", "Ad showed fullscreen content.")
+                }
+            }
+        }
+        else mAdView.visibility = View.GONE
     }
 
     override fun onResume(){
@@ -575,6 +473,9 @@ class MainActivity : AppCompatActivity() {
         //синхронизируем с галереей
         if(userViewModel.lastImagePath!="err"&&File(userViewModel.lastImagePath).exists()) {
             findViewById<ImageView>(R.id.openGalery).setImageURI(Uri.fromFile(File(userViewModel.lastImagePath)))
+        }
+        else{
+            findViewById<ImageView>(R.id.openGalery).setImageResource(R.drawable.app_icon)
         }
         if (!is360Mode)onMirrorClick(findViewById(R.id.buttonMirror))
         else on360Click(findViewById(R.id.button360))
@@ -591,8 +492,159 @@ class MainActivity : AppCompatActivity() {
             val caIntent = Intent(this@MainActivity, CameraAccessActivity::class.java)
             startActivity(caIntent)
             isAppStarted = false
+        }else if(mInterstitialAd != null&&userViewModel.isADActive&&((System.currentTimeMillis()-userViewModel.lastInterstitialShowed) > (userViewModel.interstitialTimer*1000))){
+            userViewModel.shotCurrentADTime()
+            mInterstitialAd?.show(this)
+            this@MainActivity.onStop()
         }
         else {
+            if (isAppReady) {
+                //adTimer
+                if (!timerAdBanner.isStarted && userViewModel.isFeedbackActive) {
+                    timerAdBanner.startTimer((userViewModel.adBannerTimer * 60000).toLong())
+                }
+                timerAdBanner.listener = {
+                    findViewById<AdView>(R.id.adViewMain).visibility = View.GONE
+                    findViewById<TextView>(R.id.textView12).visibility = View.VISIBLE
+                    findViewById<MaterialButton>(R.id.clear).visibility = View.VISIBLE
+                    findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.VISIBLE
+                }
+
+                if (!timerRateRequest.isStarted && userViewModel.isFeedbackActive) timerRateRequest.startTimer(
+                    (userViewModel.rateRequestTimer * 60000).toLong()
+                )
+                timerRateRequest.listener = {
+                    var rate = 0
+                    if (bottomSheetDialog == null)
+                        bottomSheetDialog = SmoothBottomSheetDialog(this)
+                    else {
+                        bottomSheetDialog!!.dismiss()
+                        bottomSheetDialog = SmoothBottomSheetDialog(this)
+                    }
+                    bottomSheetDialog!!.setContentView(R.layout.bottom_sheet_dialog_rate)
+
+                    val step1 =
+                        bottomSheetDialog!!.findViewById<ConstraintLayout>(R.id.bsdrateStep1)
+                    val stepOK =
+                        bottomSheetDialog!!.findViewById<ConstraintLayout>(R.id.bsdrateStepOK)
+                    val stepBAD =
+                        bottomSheetDialog!!.findViewById<ConstraintLayout>(R.id.bsdrateStepBAD)
+
+                    //if like
+                    val buttonOK = bottomSheetDialog!!.findViewById<Button>(R.id.buttonOK)
+                    //if hate
+                    val buttonBAD = bottomSheetDialog!!.findViewById<Button>(R.id.buttonBAD)
+
+                    buttonOK?.setOnClickListener {
+                        rate = -1
+                        step1?.visibility = View.GONE
+                        stepOK?.visibility = View.VISIBLE
+
+                        val star1 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star1)
+                        val star2 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star2)
+                        val star3 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star3)
+                        val star4 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star4)
+                        val star5 = bottomSheetDialog!!.findViewById<ImageView>(R.id.star5)
+                        val buttonRate = bottomSheetDialog!!.findViewById<Button>(R.id.bsdrateRate)
+
+                        star1?.setOnClickListener {
+                            rate = 1
+                            selectStar(star1, star2, star3, star4, star5, buttonRate, 1)
+                        }
+                        star2?.setOnClickListener {
+                            rate = 2
+                            selectStar(star1, star2, star3, star4, star5, buttonRate, 2)
+                        }
+                        star3?.setOnClickListener {
+                            rate = 3
+                            selectStar(star1, star2, star3, star4, star5, buttonRate, 3)
+                        }
+                        star4?.setOnClickListener {
+                            rate = 4
+                            selectStar(star1, star2, star3, star4, star5, buttonRate, 4)
+                        }
+                        star5?.setOnClickListener {
+                            rate = 5
+                            selectStar(star1, star2, star3, star4, star5, buttonRate, 5)
+                        }
+
+                        buttonRate?.setOnClickListener {
+                            userViewModel.isFeedbackActive = false
+                            timerRateRequest.stop()
+                            if (rate in 1..3) {
+                                bottomSheetDialog!!.hide()
+                                return@setOnClickListener
+                            } else if (rate > 3) {
+                                try {
+                                    startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")
+                                        )
+                                    )
+                                    isAppStarted = false
+                                } catch (e: ActivityNotFoundException) {
+                                    startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://play.google.com/store/apps/details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")
+                                        )
+                                    )
+                                    isAppStarted = false
+                                }
+                                return@setOnClickListener
+                            }
+                        }
+                    }
+
+                    buttonBAD?.setOnClickListener {
+                        step1?.visibility = View.GONE
+                        stepBAD?.visibility = View.VISIBLE
+
+                        val etText =
+                            bottomSheetDialog!!.findViewById<EditText>(R.id.BSDRateBadEditText)
+                        val buttonSendText =
+                            bottomSheetDialog!!.findViewById<Button>(R.id.BSDRateBadSend)
+
+                        buttonSendText?.setOnClickListener {
+                            userViewModel.isFeedbackActive = false
+                            timerRateRequest.stop()
+                            if (etText?.text?.length!! > 3) {
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = Uri.parse("mailto:")
+                                    putExtra(
+                                        Intent.EXTRA_EMAIL,
+                                        arrayOf("smarteasyapps17@gmail.com")
+                                    )
+                                    putExtra(Intent.EXTRA_SUBJECT, "mirrorAPP")
+                                    putExtra(Intent.EXTRA_TEXT, etText!!.text)
+                                }
+                                if (intent.resolveActivity(this.packageManager) != null) {
+                                    startActivity(Intent.createChooser(intent, "Send mail..."))
+                                    isAppStarted = false
+                                    bottomSheetDialog!!.hide()
+                                } else {
+                                    Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+                            }
+                        }
+                    }
+                    bottomSheetDialog!!.show()
+                    if (!timerRateRequest.isStarted && userViewModel.isFeedbackActive) {
+                        timerRateRequest.startTimer((userViewModel.rateRequestTimer * 60000).toLong())
+                    }
+                }
+                if (userViewModel.isADActive&&!payWallTimer.isStarted) {
+                    payWallTimer.startTimer((userViewModel.paywallTimer * 60000).toLong())
+                    payWallTimer.listener = {
+                        val intent = Intent(this@MainActivity, PayActivity::class.java)
+                        intent.putExtra("startTimer", true)
+                        startActivity(intent)
+                        isAppStarted = false
+                    }
+                }
+            }
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val notificationId = 257894
             val activeNotifications = notificationManager.activeNotifications
@@ -664,13 +716,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             //overridePendingTransition(R.anim.diagonal,R.anim.alpha)
-            MobileAds.initialize(
-                this
-            ) { }
-            val mAdView :AdView = findViewById(R.id.adViewMain)
-            val adRequest = AdRequest.Builder().build()
-            if(userViewModel.isADActive) mAdView.loadAd(adRequest)
-            else mAdView.visibility = View.GONE
             isCameraReady = true
             if (!isCamStarted) {
                 startCam()
@@ -696,6 +741,29 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         //myCameras?.get(openedCamera)?.closeCamera()
     }*/
+
+    private fun loadInterstitialAd(adRequest : AdRequest, start : Boolean = false) {
+        InterstitialAd.load(
+            this,
+            "ca-app-pub-8309718960294057/8582668537",
+            adRequest,
+            object : InterstitialAdLoadCallback() {
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    Log.d("InterstitialAd", adError?.toString())
+                    mInterstitialAd = null
+                }
+
+                override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                    Log.d("InterstitialAd", "Ad was loaded.")
+                    mInterstitialAd = interstitialAd
+                    if (start && userViewModel.isADActive && ((System.currentTimeMillis() - userViewModel.lastInterstitialShowed) > (userViewModel.interstitialTimer * 1000))) {
+                        userViewModel.shotCurrentADTime()
+                        mInterstitialAd?.show(this@MainActivity)
+                        this@MainActivity.onStop()
+                    }
+                }
+            })
+    }
 
     private fun selectStar(iv1: ImageView?, iv2: ImageView?,iv3: ImageView?,iv4: ImageView?,iv5: ImageView?, b: Button?, r: Int){
         if (r<=0) return
@@ -1150,6 +1218,15 @@ class MainActivity : AppCompatActivity() {
         shohtButtin.visibility = View.VISIBLE
 
         cameraMode = "photo"
+        if(userViewModel.isADActive&&((System.currentTimeMillis()-userViewModel.lastInterstitialShowed) > (userViewModel.interstitialTimer*1000))) {
+            if (mInterstitialAd != null) {
+                userViewModel.shotCurrentADTime()
+                mInterstitialAd?.show(this)
+                this@MainActivity.onStop()
+            } else {
+                Log.d("TAG", "The interstitial ad wasn't ready yet.")
+            }
+        }
     }
 
     fun on360Click(v: View){
@@ -1183,6 +1260,17 @@ class MainActivity : AppCompatActivity() {
             userViewModel.is360FirstLaunch = false
             startActivity(intent)
             isAppStarted = false
+        }
+        else{
+            if(userViewModel.isADActive&&((System.currentTimeMillis()-userViewModel.lastInterstitialShowed) > (userViewModel.interstitialTimer*1000))) {
+                if (mInterstitialAd != null) {
+                    userViewModel.shotCurrentADTime()
+                    mInterstitialAd?.show(this)
+                    this@MainActivity.onStop()
+                } else {
+                    Log.d("TAG", "The interstitial ad wasn't ready yet.")
+                }
+            }
         }
 
         //show videoShotButton
