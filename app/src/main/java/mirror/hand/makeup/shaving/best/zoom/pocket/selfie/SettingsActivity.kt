@@ -32,6 +32,8 @@ import kotlin.collections.ArrayList
 
 
 class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
+    var devcounter = 0
+
     var sky = "burger"
     var rate = -1
     private val viewModel by viewModels<MainViewModel>()
@@ -82,7 +84,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                         else PendingIntent.getActivity(this, 0, intentClose, PendingIntent.FLAG_UPDATE_CURRENT)
 
                     val remoteViews = RemoteViews(packageName, R.layout.notification)
-                    remoteViews.setTextViewText(R.id.notText, "Нажмите, чтобы открыть")
+                    remoteViews.setTextViewText(R.id.notText, getString(R.string.press_to_open))
                     remoteViews.setOnClickPendingIntent(R.id.root, pendingIntent)
                     remoteViews.setOnClickPendingIntent(R.id.imageButton222, pendingIntentClose)
 
@@ -137,6 +139,23 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
         dinner?.setOnClickListener{subscribe(4)}
 
         bottomSheetDialog.show()
+    }
+
+    fun onSettVersionClick(v: View){
+        /*devcounter++
+        if(devcounter==5)
+            Toast.makeText(this@SettingsActivity, devcounter.toString(), Toast.LENGTH_SHORT).show()
+        else if(devcounter==10) {
+            if (!viewModel.DEV_MODE) {
+                viewModel.DEV_MODE = true
+                Toast.makeText(this,"developer mode active",Toast.LENGTH_SHORT).show()
+            }
+            else {
+                viewModel.DEV_MODE = false
+                Toast.makeText(this, "developer mode inactive", Toast.LENGTH_SHORT).show()
+            }
+            devcounter=0
+        }*/
     }
 
     fun onBuyPremClick(v: View){
@@ -313,10 +332,12 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
 
             buttonRate?.setOnClickListener{
                 if (rate in 1..3){
+                    viewModel.isFeedbackActive = false
                     bottomSheetDialog.hide()
                     return@setOnClickListener
                 }
                 else if(rate>3){
+                    viewModel.isFeedbackActive = false
                     try {
                         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
                     } catch (e: ActivityNotFoundException) {
@@ -466,7 +487,6 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
 
     fun subscribe(skyId: Int) {
         //check if service is already connected
-        println("steeeeeeeeeep1")
         if (billingClient!!.isReady) {
             initiatePurchase(true, skyId)
         } else {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Hand Mirror</string>
-    <string name="version">Версия 1.0.22</string>
+    <string name="version">Версия 1.0.32</string>
     <string name="def_err_text">Неизвестная ошибка!</string>
     <string name="splash_text">Ты сегодня\nлучше всех ✨</string>
     <string name="onboarding_title_1">Зеркало \nв твоем кармане!</string>
@@ -84,7 +84,24 @@
     <string name="survey2">Поставите нам оценку?</string>
     <string name="survey3">Расскажите почему?</string>
     <string name="okey">Хорошо</string>
+    <string name="err_or_like">У Вас какая-то проблема или приложение Вам понравилось? </string>
+    <string name="have_problem">У меня возникла проблема</string>
+    <string name="no_functional">Нужные мне функции отсутствуют</string>
+    <string name="idea">У меня есть идея/предложение</string>
+    <string name="app_unusefull">Приложение неудобно</string>
+    <string name="much_ad">Много рекламы</string>
+    <string name="like_it">Мне нравится приложение</string>
+    <string name="other">Другое</string>
+    <string name="cam_error">Камера не работает</string>
+    <string name="bad_quality">Плохое качество изображения</string>
+    <string name="threed_err">Проблемы с 3D режимом</string>
     <!--config-->
     <string name="splashType">splashTextRU</string>
     <string name="video_bottext">Покажите лицо со всех сторон</string>
+    <!--notif-->
+    <string name="saved">Сохранено</string>
+    <string name="image_saved">Изображение сохранено</string>
+    <string name="saved_to_gallery">Сохранено в галерею</string>
+    <string name="permission_denied">Разрешение не получено</string>
+    <string name="press_to_open">Нажмите, чтобы открыть</string>
 </resources>

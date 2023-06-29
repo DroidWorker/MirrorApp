@@ -109,7 +109,7 @@ class VideoActivity : AppCompatActivity() {
     fun onSaveClick(v: View){
         if (mode == "preview") {
             saveImg = true
-            Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
             finish()
         }
         else{
@@ -129,7 +129,7 @@ class VideoActivity : AppCompatActivity() {
                     arrayOf("video/*"),
                     null
                 )
-                Toast.makeText(this, "Сохранено в галерею", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.saved_to_gallery), Toast.LENGTH_SHORT).show()
             } catch (e: IOException) {
                 e.printStackTrace()
             }

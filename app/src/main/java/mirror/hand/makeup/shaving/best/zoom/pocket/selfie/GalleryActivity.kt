@@ -140,7 +140,7 @@ class GalleryActivity : AppCompatActivity() {
         selectedItems.forEach{
             MediaStore.Images.Media.insertImage(getContentResolver(), imgs[adapter.getItemPath(it)], "HM"+ Instant.now() , "created by HandMirror")
         }
-        Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     }
 
     private fun startActionMode() {

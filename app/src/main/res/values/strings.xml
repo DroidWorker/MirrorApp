@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">Hand Mirror</string>
-    <string name="version">Версия 1.0.22</string>
+    <string name="version">Версия 1.0.32</string>
     <string name="def_err_text">Unknown error</string>
     <string name="splash_text">Today you’re the best ✨</string>
-    <string name="onboarding_title_1">The mirror /nin your pocket</string>
+    <string name="onboarding_title_1">The mirror \nin your pocket</string>
     <string name="onboarding_subtitle_1">Shave, fix your makeup, or put your lenses anywhere</string>
     <string name="onboarding_title_2">Even if\nit\'s dark</string>
     <string name="onboarding_subtitle_2">Turn on the backlight mode and adjust the light level</string>
@@ -50,7 +50,7 @@
     <string name="support_developers">Support the developer</string>
     <string name="buy_prem">Buy Premium</string>
     <string name="rate_app">Rate the app</string>
-    <string name="review">Оставить отзыв </string>
+    <string name="review">Leave feedback </string>
     <string name="other_app">Other apps </string>
     <string name="button_mirror">Mirror</string>
     <string name="button_360">360°</string>
@@ -83,8 +83,25 @@
     <string name="survey2">Rate us?</string>
     <string name="survey3">Tell us why?</string>
     <string name="okey">Okey!</string>
+    <string name="err_or_like">Do you have a problem or did you like the app? </string>
+    <string name="have_problem">I have a problem</string>
+    <string name="no_functional">Functions I need are missing</string>
+    <string name="idea">I have an idea/suggestion</string>
+    <string name="app_unusefull">The application is inconvenient</string>
+    <string name="much_ad">A lot of advertising</string>
+    <string name="like_it">I like the app</string>
+    <string name="other">Other</string>
+    <string name="cam_error">Camera does not work</string>
+    <string name="bad_quality">Poor image quality</string>
+    <string name="threed_err">Problems with 3D mode</string>
 
     <!--config-->
     <string name="splashType">splashTextEN</string>
     <string name="video_bottext">Show face from some angles</string>
+    <!--notif-->
+    <string name="saved">Saved</string>
+    <string name="image_saved">Image Saved</string>
+    <string name="saved_to_gallery">Saved to gallery</string>
+    <string name="permission_denied">Permission not received</string>
+    <string name="press_to_open">Click to open</string>
 </resources>

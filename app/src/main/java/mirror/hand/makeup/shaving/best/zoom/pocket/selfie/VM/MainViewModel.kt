@@ -49,6 +49,12 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
             editor.putBoolean("isNotificationActive", value)
             editor.apply()
         }
+    var isPaywallOpened : Boolean
+        get() = sharedPreference.getBoolean("isPaywallOpened", true)
+        set(value){
+            editor.putBoolean("isPaywallOpened", value)
+            editor.apply()
+        }
 
     var isFeedbackActive : Boolean
         get() = sharedPreference.getBoolean("isFeedbackActive", true)
@@ -71,6 +77,13 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
             editor.apply()
         }
 
+    var DEV_MODE : Boolean
+        get() = sharedPreference.getBoolean("devmode", false)
+        set(value){
+            editor.putBoolean("devmode", value)
+            editor.apply()
+        }
+
     var myAppsString : String
         get() = sharedPreference.getString("myAppsString", "Error")?: "Error"
         set(value){
@@ -79,21 +92,21 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
         }
 
     var adBannerTimer : Int
-    get() = sharedPreference.getInt("adBannerTimer", 2)
+    get() = sharedPreference.getInt("adBannerTimer", 9)
     set(value){
         editor.putInt("adBannerTimer", value)
         editor.apply()
     }
 
     var rateRequestTimer : Int
-        get() = sharedPreference.getInt("rateRequestTimer", 2)
+        get() = sharedPreference.getInt("rateRequestTimer", 6)
         set(value){
             editor.putInt("rateRequestTimer", value)
             editor.apply()
         }
 
     var paywallTimer : Int
-        get() = sharedPreference.getInt("paywallTimer", 10)
+        get() = sharedPreference.getInt("paywallTimer", 8)
         set(value){
             editor.putInt("paywallTimer", value)
             editor.apply()

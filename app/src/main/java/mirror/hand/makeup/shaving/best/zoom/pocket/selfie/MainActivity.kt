@@ -3,6 +3,7 @@ package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 import android.Manifest
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -74,7 +75,10 @@ class MainActivity : AppCompatActivity() {
     var isCamStarted = false
     var isInShot = false
     var is360Mode = false
+    var isAppReadyToAd = false
     var scale = 0
+
+    lateinit var adRequest : AdRequest
 
     var cameraMode = "photo"
 
@@ -400,7 +404,7 @@ class MainActivity : AppCompatActivity() {
                                     }
 
                                     override fun onFailed(exception: java.lang.Exception?) {
-                                        println("exception wwwww"+exception?.localizedMessage)
+                                        println("exception "+exception?.localizedMessage)
                                     }
 
                                 })
@@ -436,39 +440,18 @@ class MainActivity : AppCompatActivity() {
             this
         ) { }
         val mAdView :AdView = findViewById(R.id.adViewMain)
-        val adRequest = AdRequest.Builder().build()
+        adRequest = AdRequest.Builder().build()
         if(userViewModel.isADActive){
             mAdView.loadAd(adRequest)
-            loadInterstitialAd(adRequest, true)
-            mInterstitialAd?.fullScreenContentCallback = object: FullScreenContentCallback() {
-                override fun onAdClicked() {
-                    // Called when a click is recorded for an ad.
-                    Log.d("InterstitialAd", "Ad was clicked.")
-                }
+            if(isAppReadyToAd)loadInterstitialAd(adRequest, true)
+            else loadInterstitialAd(adRequest)
 
-                override fun onAdDismissedFullScreenContent() {
-                    // Called when ad is dismissed.
-                    Log.d("InterstitialAd", "Ad dismissed fullscreen content.")
-                    mInterstitialAd = null
-                    loadInterstitialAd(adRequest)
-                }
-
-                override fun onAdImpression() {
-                    // Called when an impression is recorded for an ad.
-                    Log.d("InterstitialAd", "Ad recorded an impression.")
-                }
-
-                override fun onAdShowedFullScreenContent() {
-                    // Called when ad is shown.
-                    Log.d("InterstitialAd", "Ad showed fullscreen content.")
-                }
-            }
         }
         else mAdView.visibility = View.GONE
     }
 
+    @SuppressLint("CutPasteId")
     override fun onResume(){
-        super.onResume()
         findViewById<SeekBar>(R.id.seekBar3).progress = 1
         //синхронизируем с галереей
         if(userViewModel.lastImagePath!="err"&&File(userViewModel.lastImagePath).exists()) {
@@ -477,28 +460,101 @@ class MainActivity : AppCompatActivity() {
         else{
             findViewById<ImageView>(R.id.openGalery).setImageResource(R.drawable.app_icon)
         }
-        if (!is360Mode)onMirrorClick(findViewById(R.id.buttonMirror))
-        else on360Click(findViewById(R.id.button360))
         if (userViewModel.isFirstLaunch && isAppReady){
             userViewModel.isFirstLaunch = false
+            isAppReadyToAd = false
             val onboardingIntent = Intent(this@MainActivity, OnboardingActivity::class.java)
             startActivity(onboardingIntent)
             isAppStarted = false
         }else if(ContextCompat.checkSelfPermission(this, CAMERA)==PackageManager.PERMISSION_DENIED&&isAppReady){
             val caIntent = Intent(this@MainActivity, CameraAccessActivity::class.java)
             startActivity(caIntent)
-            isAppStarted = false
+            isAppReadyToAd = false
+            isAppStarted = true
         }else if(ContextCompat.checkSelfPermission(this, RECORD_AUDIO)==PackageManager.PERMISSION_DENIED&&isAppReady){
             val caIntent = Intent(this@MainActivity, CameraAccessActivity::class.java)
             startActivity(caIntent)
             isAppStarted = false
-        }else if(mInterstitialAd != null&&userViewModel.isADActive&&((System.currentTimeMillis()-userViewModel.lastInterstitialShowed) > (userViewModel.interstitialTimer*1000))){
+        }else if(mInterstitialAd!=null&&isAppReadyToAd&&userViewModel.isADActive&&((System.currentTimeMillis()-userViewModel.lastInterstitialShowed) > (userViewModel.interstitialTimer*1000))&&isAppReady){
             userViewModel.shotCurrentADTime()
+            //Toast.makeText(applicationContext, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddddddddddddddddddddddd1", Toast.LENGTH_LONG).show()
             mInterstitialAd?.show(this)
             this@MainActivity.onStop()
         }
         else {
             if (isAppReady) {
+                if (!isAppStarted) {
+                    isAppStarted = true
+                } else {
+                    // приложение только что запущено
+                    val notificationManager =
+                        getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                    val notificationId = 257894
+                    val activeNotifications = notificationManager.activeNotifications
+                    val notificationAlreadyShown =
+                        activeNotifications.any { it.id == notificationId }
+                    currentSessionNotificationActive = true
+                    // приложение было восстановлено из background
+                    if (!notificationAlreadyShown && userViewModel.isNotificationActive) {
+                        currentSessionNotificationActive = false
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            val channel = NotificationChannel(
+                                "appMirrorChannel",
+                                "AppMirror",
+                                NotificationManager.IMPORTANCE_HIGH
+                            )
+                            notificationManager.createNotificationChannel(channel)
+                        }
+                        val intent = Intent(this, MainActivity::class.java)
+                        val pendingIntent =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getActivity(
+                                this,
+                                0,
+                                intent,
+                                PendingIntent.FLAG_MUTABLE
+                            )
+                            else PendingIntent.getActivity(
+                                this,
+                                0,
+                                intent,
+                                PendingIntent.FLAG_UPDATE_CURRENT
+                            )
+                        val intentClose = Intent(this, NotificationReceiver::class.java).apply {
+                            action =
+                                "mirror.hand.makeup.shaving.best.zoom.pocket.selfie.notification.ACTION_CLOSE"
+                            putExtra("notification_id", notificationId)
+                        }
+                        val pendingIntentClose =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getBroadcast(
+                                this,
+                                0,
+                                intentClose,
+                                PendingIntent.FLAG_MUTABLE
+                            )
+                            else PendingIntent.getActivity(
+                                this,
+                                0,
+                                intentClose,
+                                PendingIntent.FLAG_UPDATE_CURRENT
+                            )
+
+                        val remoteViews = RemoteViews(packageName, R.layout.notification)
+                        remoteViews.setTextViewText(R.id.notText, getString(R.string.press_to_open))
+                        remoteViews.setOnClickPendingIntent(R.id.root, pendingIntent)
+                        remoteViews.setOnClickPendingIntent(R.id.imageButton222, pendingIntentClose)
+                        val builder = NotificationCompat.Builder(this, "appMirrorChannel")
+                            .setSmallIcon(R.drawable.app_icon)
+                            .setContentTitle("BeauttyMirror")
+                            .setCustomContentView(remoteViews)
+                            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setContentIntent(pendingIntent)
+                            .setAutoCancel(false) // флаг, который делает уведомление невозможным для закрытия свайпом
+                            .setOngoing(true) // флаг, который делает уведомление невозможным для закрытия пользователем
+
+                        notificationManager.notify(notificationId, builder.build())
+                    }
+                }
                 //adTimer
                 if (!timerAdBanner.isStarted && userViewModel.isFeedbackActive) {
                     timerAdBanner.startTimer((userViewModel.adBannerTimer * 60000).toLong())
@@ -571,6 +627,14 @@ class MainActivity : AppCompatActivity() {
                         buttonRate?.setOnClickListener {
                             userViewModel.isFeedbackActive = false
                             timerRateRequest.stop()
+                            timerAdBanner.stop()
+                            findViewById<AdView>(R.id.adViewMain).visibility = View.VISIBLE
+                            findViewById<TextView>(R.id.textView12).visibility = View.GONE
+                            findViewById<MaterialButton>(R.id.clear).visibility = View.GONE
+                            findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.GONE
+                            dialogStep = 1
+                            findViewById<TextView>(R.id.textView12).text = resources.getString(R.string.survey1)
+                            findViewById<Button>(R.id.clear).text = resources.getString(R.string.yes)
                             if (rate in 1..3) {
                                 bottomSheetDialog!!.hide()
                                 return@setOnClickListener
@@ -609,6 +673,14 @@ class MainActivity : AppCompatActivity() {
                         buttonSendText?.setOnClickListener {
                             userViewModel.isFeedbackActive = false
                             timerRateRequest.stop()
+                            timerAdBanner.stop()
+                            findViewById<AdView>(R.id.adViewMain).visibility = View.VISIBLE
+                            findViewById<TextView>(R.id.textView12).visibility = View.GONE
+                            findViewById<MaterialButton>(R.id.clear).visibility = View.GONE
+                            findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.GONE
+                            dialogStep = 1
+                            findViewById<TextView>(R.id.textView12).text = resources.getString(R.string.survey1)
+                            findViewById<Button>(R.id.clear).text = resources.getString(R.string.yes)
                             if (etText?.text?.length!! > 3) {
                                 val intent = Intent(Intent.ACTION_SENDTO).apply {
                                     data = Uri.parse("mailto:")
@@ -636,93 +708,52 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 if (userViewModel.isADActive&&!payWallTimer.isStarted) {
+                    payWallTimer.isDev=false
                     payWallTimer.startTimer((userViewModel.paywallTimer * 60000).toLong())
                     payWallTimer.listener = {
-                        val intent = Intent(this@MainActivity, PayActivity::class.java)
-                        intent.putExtra("startTimer", true)
-                        startActivity(intent)
-                        isAppStarted = false
+                        if(!userViewModel.isPaywallOpened) {
+                            val intent = Intent(this@MainActivity, PayActivity::class.java)
+                            intent.putExtra("startTimer", true)
+                            startActivity(intent)
+                            isAppReadyToAd = false
+                            isAppStarted = false
+                        }
                     }
+                    if (userViewModel.DEV_MODE)
+                        payWallTimer.devListener = {
+                            findViewById<TextView>(R.id.devtextView).text = "до отображения: ${it.toString()}мс"
+                        }
+                    else
+                        findViewById<TextView>(R.id.devtextView).visibility = View.GONE
                 }
+                /*if (userViewModel.isADActive && ((System.currentTimeMillis() - userViewModel.lastInterstitialShowed) > (userViewModel.interstitialTimer * 1000))) {
+                    userViewModel.shotCurrentADTime()
+                    mInterstitialAd?.show(this@MainActivity)
+                    this@MainActivity.onStop()
+                }*/
             }
-            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            val notificationId = 257894
-            val activeNotifications = notificationManager.activeNotifications
-            val notificationAlreadyShown = activeNotifications.any { it.id == notificationId }
-            if (!isAppStarted) {
-                // приложение только что запущено
-                isAppStarted = true
-            } else {
-                currentSessionNotificationActive = true
-                // приложение было восстановлено из background
-                if (!notificationAlreadyShown && userViewModel.isNotificationActive) {
-                    currentSessionNotificationActive = false
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        val channel = NotificationChannel(
-                            "appMirrorChannel",
-                            "AppMirror",
-                            NotificationManager.IMPORTANCE_HIGH
-                        )
-                        notificationManager.createNotificationChannel(channel)
-                    }
-                    val intent = Intent(this, MainActivity::class.java)
-                    val pendingIntent =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getActivity(
-                            this,
-                            0,
-                            intent,
-                            PendingIntent.FLAG_MUTABLE
-                        )
-                        else PendingIntent.getActivity(
-                            this,
-                            0,
-                            intent,
-                            PendingIntent.FLAG_UPDATE_CURRENT
-                        )
-                    val intentClose = Intent(this, NotificationReceiver::class.java).apply {
-                        action =
-                            "mirror.hand.makeup.shaving.best.zoom.pocket.selfie.notification.ACTION_CLOSE"
-                        putExtra("notification_id", notificationId)
-                    }
-                    val pendingIntentClose =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.getBroadcast(
-                            this,
-                            0,
-                            intentClose,
-                            PendingIntent.FLAG_MUTABLE
-                        )
-                        else PendingIntent.getActivity(
-                            this,
-                            0,
-                            intentClose,
-                            PendingIntent.FLAG_UPDATE_CURRENT
-                        )
-
-                    val remoteViews = RemoteViews(packageName, R.layout.notification)
-                    remoteViews.setTextViewText(R.id.notText, "Нажмите, чтобы открыть")
-                    remoteViews.setOnClickPendingIntent(R.id.root, pendingIntent)
-                    remoteViews.setOnClickPendingIntent(R.id.imageButton222, pendingIntentClose)
-                    val builder = NotificationCompat.Builder(this, "appMirrorChannel")
-                        .setSmallIcon(R.drawable.app_icon)
-                        .setContentTitle("BeauttyMirror")
-                        .setCustomContentView(remoteViews)
-                        .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .setContentIntent(pendingIntent)
-                        .setAutoCancel(false) // флаг, который делает уведомление невозможным для закрытия свайпом
-                        .setOngoing(true) // флаг, который делает уведомление невозможным для закрытия пользователем
-
-                    notificationManager.notify(notificationId, builder.build())
-                }
+            if (!userViewModel.isFeedbackActive){
+                try{if (timerRateRequest.isStarted)timerRateRequest.stop()
+                if (timerAdBanner.isStarted)timerAdBanner.stop()
+                findViewById<AdView>(R.id.adViewMain).visibility = View.VISIBLE
+                findViewById<TextView>(R.id.textView12).visibility = View.GONE
+                findViewById<MaterialButton>(R.id.clear).visibility = View.GONE
+                findViewById<ImageButton>(R.id.closeAdDialog).visibility = View.GONE
+                bottomSheetDialog?.hide()}catch (ex : Exception){}
             }
+
             //overridePendingTransition(R.anim.diagonal,R.anim.alpha)
             isCameraReady = true
             if (!isCamStarted) {
-                startCam()
+                try{startCam()}catch (ex: Exception){Toast.makeText(this@MainActivity, ex.localizedMessage, Toast.LENGTH_SHORT).show()}
             }
         }
+        if (!is360Mode)onMirrorClick(findViewById(R.id.buttonMirror))
+        else on360Click(findViewById(R.id.button360))
+        isAppReadyToAd = true
         isAppReady=true
         startBackgroundThread()
+        super.onResume()
     }
 
     override fun onPause() {
@@ -756,6 +787,29 @@ class MainActivity : AppCompatActivity() {
                 override fun onAdLoaded(interstitialAd: InterstitialAd) {
                     Log.d("InterstitialAd", "Ad was loaded.")
                     mInterstitialAd = interstitialAd
+                    mInterstitialAd?.fullScreenContentCallback = object: FullScreenContentCallback() {
+                        override fun onAdClicked() {
+                            // Called when a click is recorded for an ad.
+                            Log.d("InterstitialAd", "Ad was clicked.")
+                        }
+
+                        override fun onAdDismissedFullScreenContent() {
+                            // Called when ad is dismissed.
+                            Log.d("InterstitialAd", "Ad dismissed fullscreen content.")
+                            mInterstitialAd = null
+                            loadInterstitialAd(adRequest)
+                        }
+
+                        override fun onAdImpression() {
+                            // Called when an impression is recorded for an ad.
+                            Log.d("InterstitialAd", "Ad recorded an impression.")
+                        }
+
+                        override fun onAdShowedFullScreenContent() {
+                            // Called when ad is shown.
+                            Log.d("InterstitialAd", "Ad showed fullscreen content.")
+                        }
+                    }
                     if (start && userViewModel.isADActive && ((System.currentTimeMillis() - userViewModel.lastInterstitialShowed) > (userViewModel.interstitialTimer * 1000))) {
                         userViewModel.shotCurrentADTime()
                         mInterstitialAd?.show(this@MainActivity)
@@ -860,7 +914,7 @@ class MainActivity : AppCompatActivity() {
     private fun startCam(){
         mCameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
         try {
-            if(mCameraManager!=null) {
+            if(mCameraManager!=null/*&& myCameras!=null && myCameras?.size!!>=1*/) {
                 // Получение списка камер с устройства
                 myCameras = ArrayList<CameraService>()
                 var i = 0
@@ -1218,9 +1272,10 @@ class MainActivity : AppCompatActivity() {
         shohtButtin.visibility = View.VISIBLE
 
         cameraMode = "photo"
-        if(userViewModel.isADActive&&((System.currentTimeMillis()-userViewModel.lastInterstitialShowed) > (userViewModel.interstitialTimer*1000))) {
+        if(isAppReadyToAd&&userViewModel.isADActive&&((System.currentTimeMillis()-userViewModel.lastInterstitialShowed) > (userViewModel.interstitialTimer*1000))) {
             if (mInterstitialAd != null) {
                 userViewModel.shotCurrentADTime()
+                //Toast.makeText(applicationContext, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddddddddddddddddddddddd3", Toast.LENGTH_LONG).show()
                 mInterstitialAd?.show(this)
                 this@MainActivity.onStop()
             } else {
@@ -1374,6 +1429,7 @@ class MainActivity : AppCompatActivity() {
 
     fun noAdsClick(v: View){
         if(isInShot) return
+        userViewModel.isPaywallOpened = true
         val intent = Intent(this@MainActivity, PayActivity::class.java)
         startActivity(intent)
         isAppStarted = false
@@ -1467,7 +1523,6 @@ class MainActivity : AppCompatActivity() {
                     characteristics = mCameraManager?.getCameraCharacteristics(mCameraID)
                     val focusRange = characteristics?.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE) to
                             characteristics?.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE)
-                    println("staaaaaaaaaaaaaa"+focusRange)
                 }
             } catch (e: Exception) {
                 Log.i("opencamerr", e.localizedMessage)
@@ -1492,7 +1547,6 @@ class MainActivity : AppCompatActivity() {
             try {
                 val support = characteristics?.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
                 if (support == true) {
-                    println("fdfdfdfdf")
                     if (!flashlightEnabled) {
                         cameraManager.setTorchMode(mCameraID, true)
                         flashlightEnabled = true
@@ -1766,7 +1820,6 @@ class MainActivity : AppCompatActivity() {
         private val mCameraCallback: CameraDevice.StateCallback =
             object : CameraDevice.StateCallback() {
                 override fun onOpened(camera: CameraDevice) {
-                    println("ooooooopened")
                     isCamStarted = true
                     mCameraDevice = camera
                     Log.i("camerr", "Open camera  with id:" + mCameraDevice!!.id)

@@ -90,6 +90,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        viewModel.isPaywallOpened = false
         billingClient.endConnection()
     }
 
@@ -140,7 +141,6 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
 
     fun subscribe(view: View?) {
         //check if service is already connected
-        println("steeeeeeeeeep1")
         if (billingClient!!.isReady) {
             initiatePurchase()
         } else {
@@ -162,7 +162,6 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
     }
 
     private fun initiatePurchase() {
-        println("stttteeeep2")
         val skuList: MutableList<String> = ArrayList()
         if (tarif=="week")skuList.add("mons67r")
         else skuList.add("year201r")

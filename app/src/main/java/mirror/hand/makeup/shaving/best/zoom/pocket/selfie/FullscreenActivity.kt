@@ -121,7 +121,7 @@ class FullscreenActivity : AppCompatActivity() {
             ) { _, uri ->
                 // сохранение uri в галерее выполнено успешно
                 runOnUiThread {
-                    val toast = Toast.makeText(ctx, "Изображение сохранено", Toast.LENGTH_SHORT)
+                    val toast = Toast.makeText(ctx, getString(R.string.image_saved), Toast.LENGTH_SHORT)
                     toast.show()
                     finish()
                 }
@@ -129,7 +129,7 @@ class FullscreenActivity : AppCompatActivity() {
         }
         saveImg = true
         if(path!=null) viewModel.lastImagePath = path!!
-        val toast = Toast.makeText(ctx, "Изображение сохранено", Toast.LENGTH_SHORT)
+        val toast = Toast.makeText(ctx, getString(R.string.image_saved), Toast.LENGTH_SHORT)
         toast.show()
         finish()
     }

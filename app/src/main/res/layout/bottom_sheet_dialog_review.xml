@@ -77,7 +77,7 @@
             android:id="@+id/textView6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="У Вас какая-то проблема или приложение Вам понравилось? "
+            android:text="@string/err_or_like"
             android:textColor="#FFFFFF"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -95,49 +95,49 @@
                 android:id="@+id/radioButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="У меня возникла проблема"
+                android:text="@string/have_problem"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
                 android:id="@+id/radioButton3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Нужные мне функции отсутствуют"
+                android:text="@string/no_functional"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
                 android:id="@+id/radioButton4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="У меня есть идея/предложение"
+                android:text="@string/idea"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
                 android:id="@+id/radioButton5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Приложение неудобно "
+                android:text="@string/app_unusefull"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
                 android:id="@+id/radioButton6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Много рекламы"
+                android:text="@string/much_ad"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
                 android:id="@+id/radioButton7"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Мне нравится приложение"
+                android:text="@string/like_it"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
                 android:id="@+id/radioButton9"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Другое"
+                android:text="@string/other"
                 android:textColor="#FFFFFF" />
         </RadioGroup>
 
@@ -147,7 +147,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/rounded_white"
             android:clickable="false"
-            android:text="Далее"
+            android:text="@string/next"
             android:textColor="#000000"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -177,28 +177,28 @@
                 android:id="@+id/radioButton10"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Камера не работает"
+                android:text="@string/cam_error"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
                 android:id="@+id/radioButton11"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Плохое качество изображения"
+                android:text="@string/bad_quality"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
                 android:id="@+id/radioButton12"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Проблемы с 3D режимом"
+                android:text="@string/threed_err"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
                 android:id="@+id/radioButton13"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Другое"
+                android:text="@string/other"
                 android:textColor="#FFFFFF" />
         </RadioGroup>
 
@@ -208,7 +208,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/rounded_white"
             android:clickable="false"
-            android:text="Далее"
+            android:text="@string/next"
             android:textColor="#000000"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"

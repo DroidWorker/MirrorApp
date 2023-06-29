@@ -11,8 +11,8 @@ android {
         applicationId "mirror.hand.makeup.shaving.best.zoom.pocket.selfie"
         minSdk 24
         targetSdk 32
-        versionCode 22
-        versionName "1.0.22"
+        versionCode 32
+        versionName "1.0.32"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
