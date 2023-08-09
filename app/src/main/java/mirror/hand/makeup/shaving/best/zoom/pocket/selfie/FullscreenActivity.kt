@@ -1,5 +1,6 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -7,13 +8,18 @@ import android.graphics.BitmapFactory
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
+import androidx.viewpager2.widget.ViewPager2.SCROLL_STATE_DRAGGING
+import androidx.viewpager2.widget.ViewPager2.SCROLL_STATE_IDLE
+import androidx.viewpager2.widget.ViewPager2.SCROLL_STATE_SETTLING
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
@@ -23,6 +29,7 @@ import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.PhotoPagerAdapter
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileInputStream
 
 
 class FullscreenActivity : AppCompatActivity() {
@@ -61,7 +68,7 @@ class FullscreenActivity : AppCompatActivity() {
             }
 
             override fun onAdFailedToLoad(adError: LoadAdError) {
-                Toast.makeText(applicationContext, "ERROR| "+adError.message, Toast.LENGTH_SHORT).show()
+                //Toast.makeText(applicationContext, "ERROR| "+adError.message, Toast.LENGTH_SHORT).show()
             }
 
             override fun onAdImpression() {
@@ -92,13 +99,32 @@ class FullscreenActivity : AppCompatActivity() {
             val index = tmplist.indexOf(path)
             adapter = PhotoPagerAdapter()
             adapter.setPhotos(tmplist)
+            adapter.currentImageIndex = index
             val viewPager = findViewById<ViewPager2>(R.id.fullscreenImage)
             viewPager.adapter = adapter
+            var settled = false
             viewPager.setCurrentItem(index, false)
             viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
                     adapter.currentImageIndex = position
+                }
+                override fun onPageScrollStateChanged(state: Int) {
+                    if (state == SCROLL_STATE_DRAGGING) {
+                        settled = false
+                    }
+                    if (state == SCROLL_STATE_SETTLING) {
+                        settled = true
+                    }
+                    if (state == SCROLL_STATE_IDLE && !settled) {
+                        if(getVideoFromFolder().isNotEmpty()) {
+                            val intent = Intent(this@FullscreenActivity, VideoActivity::class.java)
+                            intent!!.putExtra("mode", "inrow")
+                            if(adapter.currentImageIndex==0)intent.putExtra("direction", false)
+                            startActivity(intent)
+                            finish()
+                        }
+                    }
                 }
             })
         }
@@ -114,18 +140,7 @@ class FullscreenActivity : AppCompatActivity() {
     fun onSaveClick(v: View){
         if(mode=="default"){//default mode save image to phone gallery
             val file = File(adapter.getCurrentImage())
-            MediaScannerConnection.scanFile(
-                this,
-                arrayOf(file.absolutePath),
-                null
-            ) { _, uri ->
-                // сохранение uri в галерее выполнено успешно
-                runOnUiThread {
-                    val toast = Toast.makeText(ctx, getString(R.string.image_saved), Toast.LENGTH_SHORT)
-                    toast.show()
-                    finish()
-                }
-            }
+            scanMedia(file)
         }
         saveImg = true
         if(path!=null) viewModel.lastImagePath = path!!
@@ -165,6 +180,41 @@ class FullscreenActivity : AppCompatActivity() {
         shareIntent.type = "image/*"
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         startActivity(Intent.createChooser(shareIntent, "send"))
+    }
+
+    fun scanMedia(mediaFile: File) {
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, mediaFile.name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
+        }
+
+        val contentResolver = this.contentResolver
+        val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+        uri?.let { outputStream ->
+            contentResolver.openOutputStream(outputStream)?.use { output ->
+                FileInputStream(mediaFile).use { input ->
+                    input.copyTo(output)
+                }
+            }
+        }
+    }
+
+    fun  getVideoFromFolder(): List<String>{
+        val folder = File(applicationContext.getExternalFilesDir(null), "videos")
+        val vids = ArrayList<String>()
+        if (folder.exists()) {
+            for (file in folder.listFiles()) {
+                if (file.isFile) {
+                    if (file.exists() && file.length() == 0L) {
+                        file.delete()
+                    }else {
+                        vids.add(file.absolutePath)
+                    }
+                }
+            }
+        }
+        return vids
     }
 
     fun getImagesFromFolder(): Map<String, Bitmap> {

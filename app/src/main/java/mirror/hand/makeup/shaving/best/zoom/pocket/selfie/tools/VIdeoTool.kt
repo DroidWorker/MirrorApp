@@ -36,6 +36,7 @@ class VIdeoTool(context: Context, act : Activity) {
         }*/
 
         cameraRecorder = CameraRecorderBuilder(act, sampleGLView)
+            .videoSize(480, 854)
             .lensFacing(LensFacing.FRONT)
             .build()
     }

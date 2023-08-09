@@ -1,11 +1,5 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -14,22 +8,16 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
-import android.widget.RemoteViews
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.SkuType.SUBS
-import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
-import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.NotificationReceiver
-
 
 class SplashActivity : AppCompatActivity() {
     private val viewModel by viewModels<MainViewModel>()

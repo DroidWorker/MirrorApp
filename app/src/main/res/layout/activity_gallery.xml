@@ -63,7 +63,7 @@
             app:srcCompat="@drawable/delete" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <GridView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/grid_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"

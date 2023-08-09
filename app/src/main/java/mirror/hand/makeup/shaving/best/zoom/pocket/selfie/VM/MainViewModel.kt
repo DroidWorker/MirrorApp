@@ -113,7 +113,7 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
         }
 
     var interstitialTimer : Int
-        get() = sharedPreference.getInt("InterstitialTimer", 60)
+        get() = sharedPreference.getInt("InterstitialTimer", 180)
         set(value){
             editor.putInt("InterstitialTimer", value)
             editor.apply()

@@ -18,16 +18,10 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.DialogFragment
 import com.android.billingclient.api.*
-import com.google.android.gms.common.ErrorDialogFragment.newInstance
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.NotificationReceiver
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.SmoothBottomSheetDialog
-import java.util.*
 import kotlin.collections.ArrayList
 
 
@@ -94,6 +88,7 @@ class SettingsActivity : AppCompatActivity(), PurchasesUpdatedListener {
                         .setCustomContentView(remoteViews)
                         .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                         .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                         .setAutoCancel(false) // флаг, который делает уведомление невозможным для закрытия свайпом
                         .setOngoing(true) // флаг, который делает уведомление невозможным для закрытия пользователем
 

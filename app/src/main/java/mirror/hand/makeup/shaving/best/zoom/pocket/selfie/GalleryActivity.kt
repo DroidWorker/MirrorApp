@@ -1,21 +1,19 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
-import android.content.ContentProvider
+import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.media.MediaMetadataRetriever
-import android.media.ThumbnailUtils
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.CancellationSignal
+import android.os.Environment
 import android.provider.MediaStore
-import android.provider.MediaStore.Video.Thumbnails.MINI_KIND
 import android.util.Log
-import android.util.Size
 import android.view.View
 import android.widget.*
 import androidx.activity.viewModels
@@ -23,10 +21,14 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
+import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.GalleryItem
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.ImageAdapter
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.dialog.MyDialogFragment
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.time.Instant
@@ -37,27 +39,36 @@ class GalleryActivity : AppCompatActivity() {
 
     private var isActionMode = false
     private var selectedItems = mutableListOf<Int>()
-    lateinit var imgs : Map<String, Bitmap>
-    lateinit var vids : Map<String, Bitmap>
+    lateinit var imgs : List<String>
+    lateinit var vids : List<String>
 
     lateinit var adapter : ImageAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.layout.activity_gallery)
+        setContentView(R.layout.activity_gallery)
 
-        val gridView = findViewById<GridView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.grid_view)
+        val gridView = findViewById<RecyclerView>(R.id.grid_view)
         imgs = getImagesFromFolder("img")
         vids = getVideoFromFolder()
-        adapter = ImageAdapter(this, imgs, vids)
+        val galleryItems = mutableListOf<GalleryItem>()
+        imgs.forEach{
+            galleryItems.add(GalleryItem(it, true))
+        }
+        vids.forEach{
+            galleryItems.add(GalleryItem(it, false))
+        }
+        adapter = ImageAdapter(this, galleryItems)
+        val layoutManager = GridLayoutManager(this, 3) // Устанавливаем 2 столбца
+        gridView.layoutManager = layoutManager
         gridView.adapter = adapter
 
 
-        gridView.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
+        adapter.onItemClick = { position, view ->
             if (isActionMode) {
                 selectItem(position, view)
             } else {
-                userViewModel.currentImage.tryEmit(adapter.separatedImages[position])
+                //userViewModel.currentImage.tryEmit(adapter.separatedImages[position])
                 var vintent : Intent?
                 adapter.getItemPath(position).let {
                     if (it?.contains("mirrorImages") == true) {
@@ -73,7 +84,7 @@ class GalleryActivity : AppCompatActivity() {
             }
         }
 
-        gridView.onItemLongClickListener = AdapterView.OnItemLongClickListener { parent, view, position, id ->
+        adapter.onItemLongClick = { position, view ->
             if (!isActionMode) {
                 startActionMode()
                 selectItem(position, view)
@@ -108,7 +119,7 @@ class GalleryActivity : AppCompatActivity() {
                 }
             }
             selectedItems.forEach {
-                adapter.separatedImages.removeAt(it)
+                adapter.removeItem(it)
             }
             selectedItems.clear()
             adapter.notifyDataSetChanged()
@@ -138,8 +149,12 @@ class GalleryActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun onSaveGalleryClick(v: View){
         selectedItems.forEach{
-            MediaStore.Images.Media.insertImage(getContentResolver(), imgs[adapter.getItemPath(it)], "HM"+ Instant.now() , "created by HandMirror")
+            if(adapter.getItemType(it)) scanMedia(File(adapter.getItemPath(it)), true)
+                else scanMedia(File(getExternalFilesDir( "" ).toString()+  "/videos/" + adapter.getItemPath(it)+".mp4"), false)
         }
+        finishActionMode()
+        adapter.resetSelection()
+        adapter.notifyDataSetChanged()
         Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     }
 
@@ -158,20 +173,24 @@ class GalleryActivity : AppCompatActivity() {
     private fun selectItem(position: Int, view: View) {
         if (selectedItems.contains(position)) {
             selectedItems.remove(position)
+            adapter.setSelection(position, false)
+            adapter.notifyDataSetChanged()
             //view.background = ColorDrawable(Color.TRANSPARENT)
-            view.foreground = ColorDrawable(Color.TRANSPARENT)
-            val checker = view.findViewById<ImageView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.checkerView)
-            checker.visibility = View.GONE
-            val title = findViewById<TextView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.galleryTitle)
+            /*view.foreground = ColorDrawable(Color.TRANSPARENT)
+            val checker = view.findViewById<ImageView>(R.id.checkerView)
+            checker.visibility = View.GONE*/
+            val title = findViewById<TextView>(R.id.galleryTitle)
             title.text = getString(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.string.selected, selectedItems.size)
         } else {
             selectedItems.add(position)
+            adapter.setSelection(position, true)
+            adapter.notifyDataSetChanged()
             //view.background = ColorDrawable(Color.LTGRAY)
-            view.foreground = ContextCompat.getDrawable(this@GalleryActivity,
+            /*view.foreground = ContextCompat.getDrawable(this@GalleryActivity,
                 mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.drawable.image_selection
             )
             val checker = view.findViewById<ImageView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.checkerView)
-            checker.visibility = View.VISIBLE
+            checker.visibility = View.VISIBLE*/
             val title = findViewById<TextView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.galleryTitle)
             title.text = getString(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.string.selected, selectedItems.size)
         }
@@ -183,6 +202,26 @@ class GalleryActivity : AppCompatActivity() {
         }
     }
 
+    fun scanMedia(mediaFile: File, isPhoto: Boolean) {
+        println("eeeeeerrrrrrr save "+mediaFile.absolutePath)
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, mediaFile.name)
+            put(MediaStore.MediaColumns.MIME_TYPE, if(isPhoto)"image/jpeg" else "video/mp4")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
+        }
+
+        val contentResolver = this.contentResolver
+        val uri = if(isPhoto) contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            else contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues)
+        uri?.let { outputStream ->
+            contentResolver.openOutputStream(outputStream)?.use { output ->
+                FileInputStream(mediaFile).use { input ->
+                    input.copyTo(output)
+                }
+            }
+        }
+    }
+
     private fun finishActionMode() {
         isActionMode = false
         val delete = findViewById<ImageView>(mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.id.galleryDelete)
@@ -191,27 +230,27 @@ class GalleryActivity : AppCompatActivity() {
         delete.visibility = View.GONE
         share.visibility = View.GONE
         save.setImageDrawable(ContextCompat.getDrawable(this@GalleryActivity,
-            mirror.hand.makeup.shaving.best.zoom.pocket.selfie.R.drawable.close
+            R.drawable.close
         ))
         findViewById<TextView>(R.id.galleryTitle).text = resources.getString(R.string.gallery_title)
         selectedItems.clear()
     }
 
-    fun getImagesFromFolder(folderName: String): Map<String, Bitmap> {
+    fun getImagesFromFolder(folderName: String): List<String> {
         val folder = File(applicationContext.getExternalFilesDir(null), "mirrorImages")
-        val images = mutableMapOf<String, Bitmap>()
+        val images = mutableListOf<String>()
         if (folder.exists()) {
             for (file in folder.listFiles()) {
                 try {
-                    images[file.absolutePath] = BitmapFactory.decodeFile(file.absolutePath)
+                    images.add(file.absolutePath)
                 }catch (ex: Exception){}
             }
         }
         return images
     }
-    fun  getVideoFromFolder(): Map<String, Bitmap>{
+    fun  getVideoFromFolder(): List<String>{
         val folder = File(applicationContext.getExternalFilesDir(null), "videos")
-        val vids = mutableMapOf<String, Bitmap>()
+        val vids = mutableListOf<String>()
         val folderth = File(this.getExternalFilesDir( "" ).toString()+ "/videos/thumb")
         folderth.mkdirs()
         if (folder.exists()) {
@@ -251,8 +290,7 @@ class GalleryActivity : AppCompatActivity() {
                                 this.getExternalFilesDir("")
                                     .toString() + "/videos/thumb/${filename}.png"
                             )
-                            vids[f.name.replace(".png", "")] =
-                                BitmapFactory.decodeFile(f.absolutePath)
+                            vids.add(f.name.replace(".png", ""))
                         } catch (ex: Exception) {
                             Log.e("parceThumbError", ex.stackTraceToString())
                         }
@@ -269,7 +307,7 @@ class GalleryActivity : AppCompatActivity() {
             file.delete()
         }
         val imgs = getImagesFromFolder("img")
-        if (imgs.isNotEmpty()) userViewModel.lastImagePath = imgs.keys.last()
+        if (imgs.isNotEmpty()) userViewModel.lastImagePath = imgs.last()
         else userViewModel.lastImagePath = "err"
     }
 }

@@ -1,27 +1,19 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
-import android.widget.RemoteViews
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.core.app.NotificationCompat
 import androidx.viewpager.widget.ViewPager
 import com.android.billingclient.api.*
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.VM.MainViewModel
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.OnboardingViewAdapter
 import com.tbuonomo.viewpagerdotsindicator.SpringDotsIndicator
-import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.NotificationReceiver
 
 class OnboardingActivity : AppCompatActivity(), PurchasesUpdatedListener {
     private val userViewModel by viewModels<MainViewModel>()

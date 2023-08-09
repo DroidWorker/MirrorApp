@@ -1,5 +1,6 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
+import ImageAdapterSimple
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -66,7 +67,7 @@ class PayActivity : AppCompatActivity(), PurchasesUpdatedListener {
             Pair("5", BitmapFactory.decodeResource(resources, R.drawable.image5)),
             Pair("6", BitmapFactory.decodeResource(resources, R.drawable.image6))
         )
-        val adapter = ImageAdapter(this, imgs, null)
+        val adapter = ImageAdapterSimple(this, imgs, null)
         maskView.isExpanded = true
         maskView.adapter = adapter
 

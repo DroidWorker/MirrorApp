@@ -1,47 +1,35 @@
 package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 
+import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.location.GnssAntennaInfo
-import android.media.MediaMetadataRetriever
-import android.media.MediaPlayer
 import android.media.MediaScannerConnection
-import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import android.view.View
 import android.widget.ImageButton
-import android.widget.SeekBar
 import android.widget.Toast
-import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.viewpager.widget.ViewPager
-import com.google.android.exoplayer2.ExoPlaybackException
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerView
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.adapters.VideoPagerAdapter
-import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.fragment.VideoFragment
 import mirror.hand.makeup.shaving.best.zoom.pocket.selfie.tools.TimelineView
 import java.io.*
-import java.util.*
 import kotlin.collections.ArrayList
 
 class VideoActivity : AppCompatActivity() {
-    lateinit var timeline : TimelineView
-    lateinit var playerView : PlayerView
-    lateinit var videoPager : ViewPager
-    lateinit var exoplayer : ExoPlayer
-    var videoViewDuration = 0
+    lateinit var videoPager : ViewPager2
 
     var saveImg = false
     lateinit var mode: String
     lateinit var path: String
-
+    private var direction: Boolean = true//true - default
+    private var currentItemId = 0
     var isPlay = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,20 +38,55 @@ class VideoActivity : AppCompatActivity() {
 
         mode  = intent.getStringExtra("mode") ?: "default"
         path = intent.getStringExtra("imgPath") ?: ""
-        videoPager = findViewById<ViewPager>(R.id.videoPager)
-        if (path==""){
-            Toast.makeText(this, "Ошибка видео", Toast.LENGTH_LONG).show()
-            finish()
-        }
+        direction = intent.getBooleanExtra("direction", true)
+
+        videoPager = findViewById<ViewPager2>(R.id.videoPager)
         val pathList =
             if (mode=="preview") listOf(path)
             else getVideoFromFolder()
-
-        val videoPagerAdapter = VideoPagerAdapter(supportFragmentManager, pathList.toList())
+        if(pathList.isNullOrEmpty()) return
+        if (path==""&&mode!="inrow"){
+            Toast.makeText(this, "Ошибка видео", Toast.LENGTH_LONG).show()
+            finish()
+        }else if(mode=="inrow"){
+            path = pathList.first()
+        }
+        val videoPagerAdapter = VideoPagerAdapter(this, pathList.toList())
         videoPagerAdapter.mode = mode
+        var settled = false
         videoPager.adapter = videoPagerAdapter
+        videoPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                currentItemId = position
+            }
+            override fun onPageScrollStateChanged(state: Int) {
+                if (state == ViewPager2.SCROLL_STATE_DRAGGING) {
+                    settled = false
+                }
+                if (state == ViewPager2.SCROLL_STATE_SETTLING) {
+                    settled = true
+                }
+                if (state == ViewPager2.SCROLL_STATE_IDLE && !settled) {
+                    val images = getImagesFromFolder()
+                    if(images.isNotEmpty()) {
+                        val intent = Intent(this@VideoActivity, FullscreenActivity::class.java)
+                        if(currentItemId==0){
+                            intent!!.putExtra("imgPath", images.last())
+                        }
+                        else {
+                            intent!!.putExtra("imgPath", images.first())
+                        }
+                        startActivity(intent)
+                        finish()
+                    }
+                }
+            }
+        })
         if (mode=="default"){
             videoPager.setCurrentItem(pathList.indexOf(path), false)
+        }else if(mode=="inrow"&&!direction){
+            videoPager.setCurrentItem(pathList.size-1, false)
         }
     }
 
@@ -91,19 +114,17 @@ class VideoActivity : AppCompatActivity() {
         return vids
     }
 
-    fun onPausePlayClick(v: View){
-        if (isPlay) {
-            exoplayer.pause()
-            timeline.pause(exoplayer.currentPosition)
-            (v as ImageButton).setImageResource(R.drawable.play)
-            isPlay = false
-        }else{
-            exoplayer.playWhenReady = true
-            if (timeline.animation!=null)timeline.resume()
-            else timeline.smoothProgress()
-            (v as ImageButton).setImageResource(R.drawable.pause)
-            isPlay = true
+    fun getImagesFromFolder(): List<String> {
+        val folder = File(applicationContext.getExternalFilesDir(null), "mirrorImages")
+        val images = mutableListOf<String>()
+        if (folder.exists()) {
+            for (file in folder.listFiles()) {
+                try {
+                    images.add(file.absolutePath)
+                }catch (ex: Exception){}
+            }
         }
+        return images
     }
 
     fun onSaveClick(v: View){
@@ -116,19 +137,7 @@ class VideoActivity : AppCompatActivity() {
             val file = File(path)
 
             try {
-                val src = FileInputStream(File(filesDir, "video.mp4"))
-                val dst = FileOutputStream(file)
-                src.copyTo(dst)
-                src.close()
-                dst.close()
-
-                // обновите галерею, чтобы добавить сохраненное видео
-                MediaScannerConnection.scanFile(
-                    applicationContext,
-                    arrayOf(file.toString()),
-                    arrayOf("video/*"),
-                    null
-                )
+               scanMedia(file)
                 Toast.makeText(this, getString(R.string.saved_to_gallery), Toast.LENGTH_SHORT).show()
             } catch (e: IOException) {
                 e.printStackTrace()
@@ -151,6 +160,24 @@ class VideoActivity : AppCompatActivity() {
 
     fun onBackClick(v: View){
         finish()
+    }
+
+    fun scanMedia(mediaFile: File) {
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, mediaFile.name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
+        }
+
+        val contentResolver = this.contentResolver
+        val uri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues)
+        uri?.let { outputStream ->
+            contentResolver.openOutputStream(outputStream)?.use { output ->
+                FileInputStream(mediaFile).use { input ->
+                    input.copyTo(output)
+                }
+            }
+        }
     }
 
     private fun deleteFileByAbsolutePath(filePath: String) {

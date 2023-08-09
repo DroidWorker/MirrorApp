@@ -3,6 +3,9 @@ package mirror.hand.makeup.shaving.best.zoom.pocket.selfie
 import android.Manifest
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
+import android.animation.Animator
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -77,6 +80,10 @@ class MainActivity : AppCompatActivity() {
     var is360Mode = false
     var isAppReadyToAd = false
     var scale = 0
+
+    private val handler = Handler()
+    private val delayDuration = 5000L // 5 секунд
+    private var isHandlerActive = false
 
     lateinit var adRequest : AdRequest
 
@@ -251,6 +258,7 @@ class MainActivity : AppCompatActivity() {
             val omaskView = findViewById<ImageView>(R.id.overmaskView)
             omaskView.setImageResource(mascArray[currentIndex])
             currentMask = mascArray[currentIndex]
+            restartHandler()
         })
        madapter.onClick = {
            if(it%mascArray.size>currentIndex) cp.smoothScrollToPosition(it+2)
@@ -298,9 +306,9 @@ class MainActivity : AppCompatActivity() {
                 adjustBrightness(seekBar)
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar) {restartHandler()}
 
-            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {restartHandler()}
         })
         val backlightSeekBar = findViewById<SeekBar>(R.id.backlightSeekBar)
         backlightSeekBar.setOnSeekBarChangeListener(object  : SeekBar.OnSeekBarChangeListener{
@@ -308,9 +316,9 @@ class MainActivity : AppCompatActivity() {
                 adjustBacklight(seekBar)
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar) {restartHandler()}
 
-            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {restartHandler()}
         })
 
 
@@ -320,9 +328,15 @@ class MainActivity : AppCompatActivity() {
         if (folder.exists())
             findViewById<CameraVideoButton>(R.id.videoShotButton).actionListener = object : CameraVideoButton.ActionListener{
                 override fun onStartRecord() {
+                    payWallTimer.pauseTimer()
                     hideShowInterface()
+                    val allfiles = File(ctx.getExternalFilesDir( "" ).toString()+ "/videos").listFiles()
+                    val lastIndex = allfiles
+                        .map { it.name.substringBefore("|") }
+                        .mapNotNull { it.toIntOrNull() }
+                        .maxOrNull() ?: 100 // Если список пустой, начнем с индекса 100
                     val filename = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        LocalTime.now().toString().replace(".","_").replace(":","_")
+                        (lastIndex+1).toString()+"|"+LocalTime.now().toString().replace(".","_").replace(":","_")
                     } else {
                         Random().nextInt()
                     }
@@ -345,6 +359,7 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onEndRecord() {
                     if (/*isOpen &&*/cameraMode == "video") {
+                        payWallTimer.resumeTimer()
                         hideShowInterface(false)
                         vt?.destroy()
                         val outPath = vt?.stopCam()
@@ -352,8 +367,8 @@ class MainActivity : AppCompatActivity() {
                             progressBar.visibility = View.VISIBLE
                             val outputVideoPath = outPath?.replace(".mp4", "mask.mp4")
                             //масштабируем маску
-                            val width = 720
-                            val height = 1280
+                            val width = 480
+                            val height = 854
 
                             // Загружаем изображение в Bitmap
                             val bitmap = BitmapFactory.decodeResource(applicationContext.resources, currentMask)
@@ -486,6 +501,8 @@ class MainActivity : AppCompatActivity() {
                 if (!isAppStarted) {
                     isAppStarted = true
                 } else {
+                    // Скрываем элементы после 5 секунд
+                    onLayoutClicked(findViewById(R.id.imageContainer))
                     // приложение только что запущено
                     val notificationManager =
                         getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -548,6 +565,7 @@ class MainActivity : AppCompatActivity() {
                             .setCustomContentView(remoteViews)
                             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                             .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                             .setContentIntent(pendingIntent)
                             .setAutoCancel(false) // флаг, который делает уведомление невозможным для закрытия свайпом
                             .setOngoing(true) // флаг, который делает уведомление невозможным для закрытия пользователем
@@ -655,6 +673,8 @@ class MainActivity : AppCompatActivity() {
                                         )
                                     )
                                     isAppStarted = false
+                                } finally {
+                                    bottomSheetDialog!!.hide()
                                 }
                                 return@setOnClickListener
                             }
@@ -708,7 +728,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 if (userViewModel.isADActive&&!payWallTimer.isStarted) {
-                    payWallTimer.isDev=false
+                    payWallTimer.isDev=true
                     payWallTimer.startTimer((userViewModel.paywallTimer * 60000).toLong())
                     payWallTimer.listener = {
                         if(!userViewModel.isPaywallOpened) {
@@ -744,14 +764,18 @@ class MainActivity : AppCompatActivity() {
 
             //overridePendingTransition(R.anim.diagonal,R.anim.alpha)
             isCameraReady = true
-            if (!isCamStarted) {
+            /*if (!isCamStarted) {
                 try{startCam()}catch (ex: Exception){Toast.makeText(this@MainActivity, ex.localizedMessage, Toast.LENGTH_SHORT).show()}
-            }
+            }*/
         }
         if (!is360Mode)onMirrorClick(findViewById(R.id.buttonMirror))
         else on360Click(findViewById(R.id.button360))
         isAppReadyToAd = true
         isAppReady=true
+        if (!isCamStarted) {
+            try{startCam()}catch (ex: Exception){Toast.makeText(this@MainActivity, ex.localizedMessage, Toast.LENGTH_SHORT).show()}
+        }
+        payWallTimer.resumeTimer()
         startBackgroundThread()
         super.onResume()
     }
@@ -765,6 +789,7 @@ class MainActivity : AppCompatActivity() {
         }catch (ex : java.lang.Exception){}
         isCamStarted=false
         isInShot = false
+        payWallTimer.pauseTimer()
         stopBackgroundThread()
     }
 
@@ -1016,6 +1041,8 @@ class MainActivity : AppCompatActivity() {
                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
                         } catch (e: ActivityNotFoundException) {
                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=mirror.hand.makeup.shaving.best.zoom.pocket.selfie")))
+                        }finally {
+                            bottomSheetDialogr.hide()
                         }
                         return@setOnClickListener
                     }
@@ -1083,6 +1110,7 @@ class MainActivity : AppCompatActivity() {
 
     fun onMackClick(v: View, offsetkoeff : Int = 1){
         if(isInShot) return
+        restartHandler()
         val mascArray : List<Int>
         val mascPreviewArray: List<Int>
         if (userViewModel.isADActive) {
@@ -1282,6 +1310,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d("TAG", "The interstitial ad wasn't ready yet.")
             }
         }
+        restartHandler()
     }
 
     fun on360Click(v: View){
@@ -1335,10 +1364,12 @@ class MainActivity : AppCompatActivity() {
         shohtButtin.visibility = View.INVISIBLE
 
         cameraMode = "video"
+        restartHandler()
     }
 
     fun onFlipClick(v: View){
         if(isInShot) return
+        restartHandler()
         val matrix = Matrix()
         if (!flipEnabled) {
             matrix.setScale(-1f, 1f, mImageView.width / 2f, mImageView.height / 2f)
@@ -1353,16 +1384,17 @@ class MainActivity : AppCompatActivity() {
 
     fun onFlashlightClick(V: View){
         if(isInShot) return
+        restartHandler()
         mCameraManager?.let { myCameras?.get(openedCamera)?.turnOnFlashlight(it) }
     }
 
     fun onBackLightClick(v: View){
         if(isInShot) return
+        restartHandler()
         val bMirror = findViewById<TextView>(R.id.buttonMirror)
         val b360 = findViewById<TextView>(R.id.button360)
         val bBacklight = findViewById<ImageButton>(R.id.buttonBacklight)
         val seekbarbacklight = findViewById<SeekBar>(R.id.backlightSeekBar)
-        val seekbarbrightness = findViewById<SeekBar>(R.id.brightnessSeekBar)
         if (backlightEnables){
             backgroundLayout.setBackgroundColor(Color.BLACK)
             seekbarbacklight.visibility = View.GONE
@@ -1410,6 +1442,151 @@ class MainActivity : AppCompatActivity() {
                 bMirror.setTextColor(Color.BLACK)
             }
             backlightEnables = true
+        }
+    }
+
+    fun onLayoutClicked(view: View) {
+        if (isHandlerActive) {
+            restartHandler()
+            return
+        }
+        showElements()
+        // Скрываем элементы после 5 секунд
+        handler.postDelayed({
+            hideElements()
+            isHandlerActive = false
+        }, delayDuration)
+        isHandlerActive = true
+    }
+
+    fun restartHandler(){
+        if(isHandlerActive) handler.removeCallbacksAndMessages(null)
+        isHandlerActive = false
+        showElements(false)
+        // Скрываем элементы после 5 секунд
+        handler.postDelayed({
+            hideElements()
+            isHandlerActive = false
+        }, delayDuration)
+        isHandlerActive = true
+    }
+
+    private fun hideElements() {
+        val v1 = findViewById<ImageButton>(R.id.imageView7)
+        val v2 = findViewById<ImageButton>(R.id.imageButton)
+        val v3 = findViewById<ImageButton>(R.id.button2)
+        val v4 = findViewById<ImageButton>(R.id.buttonFlashlight)
+        val v5 = findViewById<ImageButton>(R.id.buttonBacklight)
+        val v6 = findViewById<SeekBar>(R.id.seekBar)
+        val v7 = findViewById<SeekBar>(R.id.seekBar3)
+        val v8 = findViewById<SeekBar>(R.id.brightnessSeekBar)
+        val v9 = findViewById<RecyclerView>(R.id.carousel)
+        val v10 = findViewById<ImageButton>(R.id.shotButton)
+        val aAnimator = ObjectAnimator.ofFloat(v1, View.ALPHA, 1f,0f)
+        val bAnimator = ObjectAnimator.ofFloat(v2, View.ALPHA, 1f,0f)
+        val cAnimator = ObjectAnimator.ofFloat(v3, View.ALPHA, 1f,0f)
+        val dAnimator = ObjectAnimator.ofFloat(v4, View.ALPHA, 1f,0f)
+        val eAnimator = ObjectAnimator.ofFloat(v5, View.ALPHA, 1f,0f)
+        val fAnimator = ObjectAnimator.ofFloat(v6, View.ALPHA, 1f,0f)
+        val gAnimator = ObjectAnimator.ofFloat(v7, View.ALPHA, 1f,0f)
+        val hAnimator = ObjectAnimator.ofFloat(v8, View.ALPHA, 1f,0f)
+        val iAnimator = ObjectAnimator.ofFloat(v9, View.ALPHA, 1f,0f)
+        val oAnimator = ObjectAnimator.ofFloat(v10, View.ALPHA, 1f,0f)
+
+        val animatorSet = AnimatorSet()
+        animatorSet.playTogether(aAnimator, bAnimator, cAnimator, dAnimator, eAnimator, fAnimator, gAnimator, hAnimator, iAnimator, oAnimator)
+        animatorSet.duration = 900
+        animatorSet.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator?) {            }
+            override fun onAnimationEnd(animation: Animator?) {
+                // Анимация завершена - скрываем элементы
+                v1.visibility = View.GONE
+                v2.visibility = View.GONE
+                v3.visibility = View.GONE
+                v4.visibility = View.GONE
+                v5.visibility = View.GONE
+                v6.visibility = View.GONE
+                v7.visibility = View.GONE
+                v8.visibility = View.GONE
+                v9.visibility = View.GONE
+                v10.visibility = View.GONE
+            }
+            override fun onAnimationCancel(animation: Animator?) {            }
+            override fun onAnimationRepeat(animation: Animator?) {            }
+        })
+        animatorSet.start()
+    }
+
+    private fun showElements(animated: Boolean = true) {
+        val v1 = findViewById<ImageButton>(R.id.imageView7)
+        val v2 = findViewById<ImageButton>(R.id.imageButton)
+        val v3 = findViewById<ImageButton>(R.id.button2)
+        val v4 = findViewById<ImageButton>(R.id.buttonFlashlight)
+        val v5 = findViewById<ImageButton>(R.id.buttonBacklight)
+        val v6 = findViewById<SeekBar>(R.id.seekBar)
+        val v7 = findViewById<SeekBar>(R.id.seekBar3)
+        val v8 = findViewById<SeekBar>(R.id.brightnessSeekBar)
+        val v9 = findViewById<RecyclerView>(R.id.carousel)
+        val v10 = findViewById<ImageButton>(R.id.shotButton)
+        v1.visibility = View.VISIBLE
+        v2.visibility = View.VISIBLE
+        v3.visibility = View.VISIBLE
+        v4.visibility = View.VISIBLE
+        v5.visibility = View.VISIBLE
+        v6.visibility = View.VISIBLE
+        v7.visibility = View.VISIBLE
+        v8.visibility = View.VISIBLE
+        v9.visibility = View.VISIBLE
+        if(cameraMode=="photo")v10.visibility = View.VISIBLE
+        if(animated) {
+            val aAnimator = ObjectAnimator.ofFloat(v1, View.ALPHA, 0f, 1f)
+            val bAnimator = ObjectAnimator.ofFloat(v2, View.ALPHA, 0f, 1f)
+            val cAnimator = ObjectAnimator.ofFloat(v3, View.ALPHA, 0f, 1f)
+            val dAnimator = ObjectAnimator.ofFloat(v4, View.ALPHA, 0f, 1f)
+            val eAnimator = ObjectAnimator.ofFloat(v5, View.ALPHA, 0f, 1f)
+            val fAnimator = ObjectAnimator.ofFloat(v6, View.ALPHA, 0f, 1f)
+            val gAnimator = ObjectAnimator.ofFloat(v7, View.ALPHA, 0f, 1f)
+            val hAnimator = ObjectAnimator.ofFloat(v8, View.ALPHA, 0f, 1f)
+            val iAnimator = ObjectAnimator.ofFloat(v9, View.ALPHA, 0f, 1f)
+            val oAnimator = ObjectAnimator.ofFloat(v10, View.ALPHA, 0f, 1f)
+
+            val animatorSet = AnimatorSet()
+            if (cameraMode == "photo") animatorSet.playTogether(
+                aAnimator,
+                bAnimator,
+                cAnimator,
+                dAnimator,
+                eAnimator,
+                fAnimator,
+                gAnimator,
+                hAnimator,
+                iAnimator,
+                oAnimator
+            )
+            else animatorSet.playTogether(
+                aAnimator,
+                bAnimator,
+                cAnimator,
+                dAnimator,
+                eAnimator,
+                fAnimator,
+                gAnimator,
+                hAnimator,
+                iAnimator
+            )
+            animatorSet.duration = 900
+            animatorSet.start()
+        }else{
+            v1.alpha=1f
+            v2.alpha=1f
+            v3.alpha=1f
+            v4.alpha=1f
+            v5.alpha=1f
+            v6.alpha=1f
+            v7.alpha=1f
+            v8.alpha=1f
+            v9.alpha=1f
+            if(cameraMode=="photo")v10.alpha=1f
         }
     }
 
@@ -1614,8 +1791,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {restartHandler()}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {restartHandler()}
             })
         }
 
@@ -1690,8 +1867,8 @@ class MainActivity : AppCompatActivity() {
                                     e.printStackTrace()
                                 }
                             }
-                            override fun onStartTrackingTouch(seekBar: SeekBar?) {    }
-                            override fun onStopTrackingTouch(seekBar: SeekBar?) {     }
+                            override fun onStartTrackingTouch(seekBar: SeekBar?) {restartHandler()}
+                            override fun onStopTrackingTouch(seekBar: SeekBar?) {restartHandler()}
                         })
                         //zoom
                 val surfaces = ArrayList<Surface>()
